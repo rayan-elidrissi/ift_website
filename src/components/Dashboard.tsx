@@ -235,8 +235,8 @@ export const Dashboard = () => {
             </motion.div>
           )}
 
-          {/* ADMIN ONLY: System Administration */}
-          {role === 'admin' && (
+          {/* ADMIN ONLY: System Administration (hidden for now) */}
+          {false && role === 'admin' && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
