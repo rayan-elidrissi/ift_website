@@ -83,7 +83,7 @@ export const Dashboard = () => {
       case 'staff':
         return <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-blue-100 flex items-center gap-1"><Users className="w-3 h-3" /> Staff Access</span>;
       default:
-        return <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-teal-100 flex items-center gap-1"><BookOpen className="w-3 h-3" /> Student Access</span>;
+        return <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-teal-100 flex items-center gap-1"><BookOpen className="w-3 h-3" /> Dashboard</span>;
     }
   };
 
@@ -92,7 +92,7 @@ export const Dashboard = () => {
       case 'director': return "Administrative Control";
       case 'admin': return "System Administration";
       case 'staff': return "Staff Portal";
-      default: return "Student Portal";
+      default: return "Dashboard";
     }
   };
 
@@ -235,8 +235,8 @@ export const Dashboard = () => {
             </motion.div>
           )}
 
-          {/* ADMIN ONLY: System Administration (hidden for now) */}
-          {false && role === 'admin' && (
+          {/* ADMIN ONLY: System Administration */}
+          {role === 'admin' && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -259,57 +259,6 @@ export const Dashboard = () => {
                   <div className="flex items-center justify-between">
                     <span>Backup Snapshot</span>
                     <span className="text-neutral-500 font-medium">Today, 03:00</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 border border-neutral-200 shadow-sm">
-                <h3 className="font-bold flex items-center gap-2 mb-4">
-                  <Users className="w-4 h-4 text-purple-600" />
-                  User Management
-                </h3>
-                <div className="space-y-3 text-sm text-neutral-700">
-                  <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
-                    <span>Active Users</span>
-                    <span className="font-semibold">128</span>
-                  </div>
-                  <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
-                    <span>Pending Invitations</span>
-                    <span className="font-semibold">6</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Role Change Requests</span>
-                    <span className="font-semibold text-amber-600">2</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 border border-neutral-200 shadow-sm md:col-span-2">
-                <h3 className="font-bold flex items-center gap-2 mb-4">
-                  <FileText className="w-4 h-4 text-purple-600" />
-                  Recent Security Activity
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 text-sm border-b border-neutral-100 pb-3">
-                    <Check className="w-4 h-4 text-green-600 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-neutral-800">New admin account verified</p>
-                      <p className="text-neutral-500 text-xs">Today at 09:14</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 text-sm border-b border-neutral-100 pb-3">
-                    <Check className="w-4 h-4 text-green-600 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-neutral-800">Password policy update deployed</p>
-                      <p className="text-neutral-500 text-xs">Yesterday at 18:42</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 text-sm">
-                    <Check className="w-4 h-4 text-green-600 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-neutral-800">Audit logs exported for compliance review</p>
-                      <p className="text-neutral-500 text-xs">Yesterday at 11:06</p>
-                    </div>
                   </div>
                 </div>
               </div>

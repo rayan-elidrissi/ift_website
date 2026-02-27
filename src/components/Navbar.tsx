@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { LogIn, LogOut, Menu, X } from "lucide-react";
+import { LogIn, LogOut, Menu, X, Edit3 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useLocation } from "react-router";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
+import { useCMS } from "../context/CMSContext";
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] =
     useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const location = useLocation();
+  const { isEditing, toggleEditMode, canEdit } = useCMS();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -115,13 +117,26 @@ export const Navbar = () => {
           {/* Right Actions */}
           <div className="hidden lg:flex items-center space-x-6 ml-12">
             {isLoggedIn ? (
-              <button
-                onClick={handleLogout}
-                className="text-neutral-400 hover:text-neutral-900 transition-colors"
-                title="Sign Out"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
+              <>
+                {canEdit && (
+                  <button
+                    onClick={toggleEditMode}
+                    className={`p-2 rounded-full transition-colors ${
+                      isEditing ? 'bg-neutral-900 text-white hover:bg-red-600' : 'text-neutral-400 hover:text-teal-600'
+                    }`}
+                    title={isEditing ? 'Exit Edit Mode' : 'Enter Edit Mode'}
+                  >
+                    <Edit3 className="w-5 h-5" />
+                  </button>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="text-neutral-400 hover:text-neutral-900 transition-colors p-2 rounded-full hover:bg-neutral-100"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </>
             ) : (
               <Link
                 to="/login"

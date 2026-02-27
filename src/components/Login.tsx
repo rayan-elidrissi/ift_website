@@ -15,15 +15,8 @@ export const Login = () => {
   useEffect(() => {
     const checkAuth = async () => {
       if (isSupabaseConfigured() && supabase) {
-        try {
-          const timeout = new Promise<{ data: { user: null } }>((resolve) =>
-            setTimeout(() => resolve({ data: { user: null } }), 5000)
-          );
-          const { data: { user } } = await Promise.race([supabase.auth.getUser(), timeout]);
-          if (user) navigate('/dashboard');
-        } catch {
-          // Ignore - show login form
-        }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) navigate('/dashboard');
         return;
       }
       if (localStorage.getItem('ift_auth')) {
@@ -49,12 +42,9 @@ export const Login = () => {
           setIsSignUp(false);
           return;
         }
-        // Clear any stale session that could block sign-in (fixes intermittent freezes)
-        await supabase.auth.signOut();
-
-        // Timeout to avoid infinite "Authenticating..."
+        // Timeout to avoid infinite "Authenticating..." on network/key issues
         const timeout = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout. In Supabase: Authentication → URL Configuration, set Site URL to https://ift-website-zeta.vercel.app and add it to Redirect URLs.')), 8000)
+          setTimeout(() => reject(new Error('Connection timeout. Check your network and Supabase URL.')), 15000)
         );
         const signIn = supabase.auth.signInWithPassword({
           email: email.trim().toLowerCase(),
