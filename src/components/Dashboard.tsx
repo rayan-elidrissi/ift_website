@@ -1,100 +1,61 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { UserPlus, Mail, Shield, Check, LogOut, Copy, Users, BookOpen, Crown, FileText, Calendar, PenTool, Edit3 } from 'lucide-react';
+import { Shield, LogOut, FileText, Users, Edit3, Check } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import type { CMSRole } from '../lib/cmsPermissions';
+
+type ProfileRow = {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  role: CMSRole | null;
+};
 
 export const Dashboard = () => {
+  const { profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [generatedPassword, setGeneratedPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [role, setRole] = useState('');
-  const [authChecked, setAuthChecked] = useState(false);
+  const [users, setUsers] = useState<ProfileRow[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      if (isSupabaseConfigured() && supabase) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          navigate('/login');
-          return;
-        }
-        setRole('admin');
+    if (!isSupabaseConfigured() || !supabase) return;
+    const fetchUsers = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, role')
+        .order('email', { nullsFirst: false });
+      if (error) {
+        console.error('Failed to fetch users:', error);
+        setUsers([]);
       } else {
-        const isAuthenticated = localStorage.getItem('ift_auth');
-        const storedRole = localStorage.getItem('ift_role');
-        if (!isAuthenticated) {
-          navigate('/login');
-          return;
-        }
-        setRole(storedRole || 'student');
+        setUsers((data as ProfileRow[]) ?? []);
       }
-      setAuthChecked(true);
+      setUsersLoading(false);
     };
-    checkAuth();
-  }, [navigate]);
+    fetchUsers();
+  }, []);
 
-  const handleLogout = async () => {
-    if (isSupabaseConfigured() && supabase) {
-      await supabase.auth.signOut();
+  const handleRoleChange = async (userId: string, newRole: CMSRole | null) => {
+    if (!supabase) return;
+    setUpdatingId(userId);
+    const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+    if (error) {
+      console.error('Failed to update role:', error);
+      alert('Could not update role. You may not have permission.');
+    } else {
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
     }
-    localStorage.removeItem('ift_auth');
-    localStorage.removeItem('ift_role');
-    window.dispatchEvent(new Event('ift_auth_change'));
-    navigate('/login');
+    setUpdatingId(null);
   };
 
-  const generatePassword = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-    let pass = "";
-    for (let i = 0; i < 12; i++) {
-      pass += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return pass;
-  };
-
-  const handleInvite = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inviteEmail) return;
-
-    setLoading(true);
-    
-    // Simulate API call to invite user
-    setTimeout(() => {
-      const password = generatePassword();
-      setGeneratedPassword(password);
-      setSuccess(true);
-      setLoading(false);
-    }, 1500);
-  };
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(generatedPassword);
-  };
-
-  const getRoleBadge = () => {
-    switch(role) {
-      case 'director':
-        return <span className="bg-red-50 text-red-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-red-100 flex items-center gap-1"><Crown className="w-3 h-3" /> Director Access</span>;
-      case 'admin':
-        return <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-purple-100 flex items-center gap-1"><Shield className="w-3 h-3" /> Admin Access</span>;
-      case 'staff':
-        return <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-blue-100 flex items-center gap-1"><Users className="w-3 h-3" /> Staff Access</span>;
-      default:
-        return <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-teal-100 flex items-center gap-1"><BookOpen className="w-3 h-3" /> Dashboard</span>;
-    }
-  };
-
-  const getHeaderContent = () => {
-    switch(role) {
-      case 'director': return "Administrative Control";
-      case 'admin': return "System Administration";
-      case 'staff': return "Staff Portal";
-      default: return "Dashboard";
-    }
-  };
+  const getRoleBadge = () => (
+    <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-purple-100 flex items-center gap-1">
+      <Shield className="w-3 h-3" /> Admin Access
+    </span>
+  );
 
   return (
     <section className="min-h-screen bg-neutral-50 p-6 md:p-12 font-sans">
@@ -104,13 +65,16 @@ export const Dashboard = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-serif text-neutral-900">{getHeaderContent()}</h1>
+              <h1 className="text-3xl font-serif text-neutral-900">System Administration</h1>
               {getRoleBadge()}
             </div>
-            <p className="text-sm text-neutral-500 font-mono mt-1">Institute for Future Technologies</p>
+            <p className="text-sm text-neutral-500 font-mono mt-1">
+              {profile?.email && <span className="text-neutral-600">{profile.email}</span>}
+              {!profile?.email && 'Institute for Future Technologies'}
+            </p>
           </div>
           <button 
-            onClick={handleLogout}
+            onClick={async () => { await signOut(); navigate('/login'); }}
             className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-500 hover:text-red-600 transition-colors"
           >
             <LogOut className="w-4 h-4" />
@@ -148,96 +112,7 @@ export const Dashboard = () => {
 
         {/* Dashboard Content Grid */}
         <div className="grid grid-cols-1 gap-8">
-          
-          {/* DIRECTOR ONLY: Invite System */}
-          {role === 'director' && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white border border-neutral-200 shadow-xl p-8 md:p-12 relative overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 p-4 opacity-5">
-                 <Shield className="w-32 h-32" />
-              </div>
-
-              <div className="relative z-10">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
-                  <UserPlus className="w-5 h-5 text-teal-600" />
-                  Invite New Member
-                </h2>
-                <p className="text-neutral-500 mb-8 max-w-lg leading-relaxed">
-                  As a Director, you can grant access to new members. Enter their email address to generate a secure temporary password.
-                </p>
-
-                {!success ? (
-                  <form onSubmit={handleInvite} className="max-w-md">
-                    <div className="mb-6">
-                      <label className="block text-xs font-mono uppercase tracking-widest text-neutral-500 mb-2">
-                        Member Email
-                      </label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                        <input
-                          type="email"
-                          value={inviteEmail}
-                          onChange={(e) => setInviteEmail(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 text-neutral-900 focus:outline-none focus:border-teal-500 transition-colors"
-                          placeholder="colleague@ift.edu"
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-neutral-900 text-white px-8 py-4 uppercase text-xs font-bold tracking-widest hover:bg-teal-600 transition-colors flex items-center gap-2 disabled:opacity-70"
-                    >
-                      {loading ? 'Generating...' : 'Generate Invite'}
-                      {!loading && <UserPlus className="w-4 h-4" />}
-                    </button>
-                  </form>
-                ) : (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-teal-50 border border-teal-100 p-6 rounded-lg max-w-lg"
-                  >
-                    <div className="flex items-center gap-3 text-teal-800 mb-4 font-bold">
-                      <Check className="w-5 h-5" />
-                      Invitation Generated
-                    </div>
-                    <p className="text-sm text-teal-700 mb-4">
-                      An invitation has been prepared for <span className="font-semibold">{inviteEmail}</span>.
-                    </p>
-                    
-                    <div className="bg-white p-4 border border-teal-100 mb-4">
-                      <span className="text-xs uppercase text-neutral-400 tracking-widest block mb-1">Temporary Password</span>
-                      <div className="flex items-center justify-between">
-                        <code className="text-lg font-mono text-neutral-900">{generatedPassword}</code>
-                        <button onClick={copyToClipboard} className="text-neutral-400 hover:text-teal-600 transition-colors" title="Copy">
-                          <Copy className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-4">
-                       <button 
-                         onClick={() => { setSuccess(false); setInviteEmail(''); setGeneratedPassword(''); }}
-                         className="text-xs font-bold uppercase tracking-widest text-teal-800 hover:text-teal-600"
-                       >
-                         Invite Another
-                       </button>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* ADMIN ONLY: System Administration */}
-          {role === 'admin' && (
-            <motion.div
+          <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="grid grid-cols-1 md:grid-cols-2 gap-6"
@@ -262,71 +137,88 @@ export const Dashboard = () => {
                   </div>
                 </div>
               </div>
+
+              <div className="bg-white p-6 border border-neutral-200 shadow-sm md:col-span-2">
+                <h3 className="font-bold flex items-center gap-2 mb-4">
+                  <Users className="w-4 h-4 text-purple-600" />
+                  User Management
+                </h3>
+                <p className="text-sm text-neutral-500 mb-4">
+                  New people can <Link to="/login" className="text-teal-600 hover:underline">sign up</Link>, then appear here. Assign a role to grant CMS access.
+                </p>
+                {usersLoading ? (
+                  <p className="text-sm text-neutral-500">Loading users…</p>
+                ) : users.length === 0 ? (
+                  <p className="text-sm text-neutral-500">No users yet. Ask people to sign up from the Login page.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-neutral-200 text-left">
+                          <th className="pb-2 pr-4 font-semibold text-neutral-700">Email</th>
+                          <th className="pb-2 pr-4 font-semibold text-neutral-700">Name</th>
+                          <th className="pb-2 font-semibold text-neutral-700">Role</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.map((u) => (
+                          <tr key={u.id} className="border-b border-neutral-100">
+                            <td className="py-3 pr-4 text-neutral-800">{u.email || '—'}</td>
+                            <td className="py-3 pr-4 text-neutral-600">{u.full_name || '—'}</td>
+                            <td className="py-3">
+                              <select
+                                value={u.role ?? ''}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  handleRoleChange(u.id, v === '' ? null : (v as CMSRole));
+                                }}
+                                disabled={updatingId === u.id}
+                                className="text-xs font-medium px-2 py-1.5 rounded border border-neutral-200 bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 disabled:opacity-50"
+                              >
+                                <option value="">No role</option>
+                                <option value="admin">Admin</option>
+                                <option value="staff">Staff</option>
+                                <option value="students">Students</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white p-6 border border-neutral-200 shadow-sm md:col-span-2">
+                <h3 className="font-bold flex items-center gap-2 mb-4">
+                  <FileText className="w-4 h-4 text-purple-600" />
+                  Recent Security Activity
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 text-sm border-b border-neutral-100 pb-3">
+                    <Check className="w-4 h-4 text-green-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-neutral-800">New admin account verified</p>
+                      <p className="text-neutral-500 text-xs">Today at 09:14</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 text-sm border-b border-neutral-100 pb-3">
+                    <Check className="w-4 h-4 text-green-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-neutral-800">Password policy update deployed</p>
+                      <p className="text-neutral-500 text-xs">Yesterday at 18:42</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 text-sm">
+                    <Check className="w-4 h-4 text-green-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-neutral-800">Audit logs exported for compliance review</p>
+                      <p className="text-neutral-500 text-xs">Yesterday at 11:06</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </motion.div>
-          )}
-
-          {/* LEAD VIEW: Project Management */}
-          {role === 'lead' && (
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 border border-neutral-200 shadow-sm">
-                   <h3 className="font-bold flex items-center gap-2 mb-4">
-                     <Users className="w-4 h-4 text-blue-600" />
-                     Team Activity
-                   </h3>
-                   <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="flex items-center gap-3 text-sm border-b border-neutral-100 pb-3 last:border-0">
-                          <div className="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center font-mono text-xs">U{i}</div>
-                          <div>
-                            <p className="font-medium">Update on Project Alpha</p>
-                            <p className="text-neutral-400 text-xs">2 hours ago</p>
-                          </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="bg-white p-6 border border-neutral-200 shadow-sm">
-                   <h3 className="font-bold flex items-center gap-2 mb-4">
-                     <PenTool className="w-4 h-4 text-blue-600" />
-                     Pending Approvals
-                   </h3>
-                   <p className="text-sm text-neutral-500">No pending approvals required.</p>
-                </div>
-             </div>
-          )}
-
-          {/* STUDENT VIEW: Courses */}
-          {role === 'student' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="bg-white p-6 border border-neutral-200 shadow-sm">
-                  <h3 className="font-bold flex items-center gap-2 mb-4">
-                    <FileText className="w-4 h-4 text-teal-600" />
-                    Current Assignments
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="p-3 bg-neutral-50 border border-neutral-100 rounded">
-                       <p className="font-medium text-sm">Creative Coding Final</p>
-                       <p className="text-xs text-red-500 mt-1">Due in 2 days</p>
-                    </div>
-                    <div className="p-3 bg-neutral-50 border border-neutral-100 rounded">
-                       <p className="font-medium text-sm">HCI Research Proposal</p>
-                       <p className="text-xs text-neutral-500 mt-1">Due next week</p>
-                    </div>
-                  </div>
-               </div>
-               <div className="bg-white p-6 border border-neutral-200 shadow-sm">
-                  <h3 className="font-bold flex items-center gap-2 mb-4">
-                    <Calendar className="w-4 h-4 text-teal-600" />
-                    Upcoming Schedule
-                  </h3>
-                  <div className="text-sm text-neutral-600">
-                    <p className="mb-2"><strong>Today 14:00</strong> - Guest Lecture</p>
-                    <p><strong>Tomorrow 10:00</strong> - Lab Access</p>
-                  </div>
-               </div>
-            </div>
-          )}
-
         </div>
       </div>
     </section>

@@ -9,7 +9,8 @@ import { useCMS } from '../context/CMSContext';
 import heroVideo from '../assets/hero_video.mp4';
 
 export const Hero = () => {
-  const { isEditing, getContent, updateContent } = useCMS();
+  const { isEditing, getContent, updateContent, canEditKey } = useCMS();
+  const canEditHero = isEditing && canEditKey('hero-video-url');
   const videoSrc = getContent('hero-video-url', '') as string;
   const [editingVideo, setEditingVideo] = useState(false);
   const [tempVideoSrc, setTempVideoSrc] = useState('');
@@ -34,7 +35,7 @@ export const Hero = () => {
         {/* Gradient Overlay for Text Readability (light so video colors show) */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
 
-        {isEditing && (
+        {canEditHero && (
           <>
             <button
               onClick={() => { setTempVideoSrc(videoSrc); setEditingVideo(true); }}

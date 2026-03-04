@@ -24,11 +24,12 @@ export const EditableLink = ({
   inputClassName,
   children,
 }: EditableLinkProps) => {
-  const { isEditing, getContent, updateContent } = useCMS();
+  const { isEditing, getContent, canEditKey } = useCMS();
   const href = getContent(id, defaultHref) as string;
   const isExternal = href.startsWith('http') || href.startsWith('//');
+  const editable = isEditing && canEditKey(id);
 
-  if (isEditing) {
+  if (editable) {
     // In edit mode, render a non-navigating wrapper so clicks open
     // the text/redirection editor instead of changing page.
     return <div className={className}>{children}</div>;

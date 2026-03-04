@@ -68,12 +68,14 @@ export const CMSModal = ({
         {showSave && (
           <div className="px-6 py-4 border-t border-neutral-200 bg-neutral-50 flex justify-end gap-3">
             <button
+              type="button"
               onClick={onClose}
               className="px-5 py-2.5 text-sm font-bold text-neutral-600 hover:text-neutral-900 uppercase tracking-wider transition-colors"
             >
               {cancelText}
             </button>
             <button
+              type="button"
               onClick={handleSaveAndClose}
               disabled={saveDisabled}
               className="px-6 py-2.5 bg-neutral-900 text-white text-sm font-bold uppercase tracking-wider hover:bg-teal-600 transition-colors flex items-center gap-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"

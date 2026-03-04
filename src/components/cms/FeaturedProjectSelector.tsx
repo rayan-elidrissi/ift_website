@@ -23,7 +23,8 @@ export const FeaturedProjectSelector: React.FC<FeaturedProjectSelectorProps> = (
   allProjects, 
   contentId 
 }) => {
-  const { getContent, updateContent, isEditing } = useCMS();
+  const { getContent, updateContent, isEditing, canEditKey } = useCMS();
+  const editable = isEditing && canEditKey(contentId);
   const [isOpen, setIsOpen] = useState(false);
   
   // Get currently selected project IDs from CMS
@@ -55,7 +56,7 @@ export const FeaturedProjectSelector: React.FC<FeaturedProjectSelectorProps> = (
     setIsOpen(true);
   };
 
-  if (!isEditing) {
+  if (!editable) {
     return null;
   }
 

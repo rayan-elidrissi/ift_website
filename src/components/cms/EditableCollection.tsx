@@ -117,7 +117,8 @@ export const EditableCollection = <T extends { id?: string }>({
   getItemStyle,
   displayItems // New prop for filtered views
 }: EditableCollectionProps<T> & { displayItems?: T[] }) => {
-  const { isEditing, getContent, updateContent } = useCMS();
+  const { isEditing, getContent, updateContent, canEditKey } = useCMS();
+  const editable = isEditing && canEditKey(id);
   const items = getContent(id, defaultData) as T[];
   
   const [editingItem, setEditingItem] = useState<T | null>(null);
@@ -175,9 +176,9 @@ export const EditableCollection = <T extends { id?: string }>({
       <div className={containerClassName}>
         {itemsToRender.map((item, index) => (
           <div key={item.id || index} className={`relative group ${itemClassName}`} style={getItemStyle ? getItemStyle(item, index) : undefined}>
-            {renderItem(item, index, isEditing)}
+            {renderItem(item, index, editable)}
             
-            {isEditing && (
+            {editable && (
               <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                 <button
                   onClick={(e) => { e.stopPropagation(); handleMoveItem(item, 'up'); }}
@@ -212,7 +213,7 @@ export const EditableCollection = <T extends { id?: string }>({
           </div>
         ))}
         
-        {isEditing && (!maxItems || items.length < maxItems) && !displayItems && (
+        {editable && (!maxItems || items.length < maxItems) && !displayItems && (
           <button
             onClick={() => setIsAdding(true)}
             className={`flex items-center justify-center border-2 border-dashed border-neutral-300 hover:border-teal-500 hover:text-teal-600 text-neutral-400 rounded-lg transition-colors p-8 min-h-[200px] w-full ${itemClassName}`}

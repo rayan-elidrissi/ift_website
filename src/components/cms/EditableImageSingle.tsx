@@ -10,7 +10,8 @@ interface EditableImageSingleProps {
 }
 
 export const EditableImageSingle = ({ id, defaultImage, alt = '', className = '' }: EditableImageSingleProps) => {
-  const { isEditing, getContent, updateContent } = useCMS();
+  const { isEditing, getContent, updateContent, canEditKey } = useCMS();
+  const editable = isEditing && canEditKey(id);
   const imageUrl = getContent(id, defaultImage);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,7 +46,7 @@ export const EditableImageSingle = ({ id, defaultImage, alt = '', className = ''
     reader.readAsDataURL(file);
   };
 
-  if (isEditing) {
+  if (editable) {
     return (
       <div className={`relative group ${className}`}>
         <img

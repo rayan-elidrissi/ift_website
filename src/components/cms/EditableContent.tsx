@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { toast } from 'sonner';
 import { useCMS } from '../../context/CMSContext';
 import { Edit2 } from 'lucide-react';
 import { CMSModal } from './CMSModal';
@@ -29,7 +30,8 @@ export const EditableContent = ({
   secondaryLabel = 'Redirection',
   secondaryPlaceholder = '/page or https://...'
 }: EditableContentProps) => {
-  const { isEditing, getContent, updateContent } = useCMS();
+  const { isEditing, getContent, updateContent, canEditKey } = useCMS();
+  const editable = isEditing && canEditKey(id);
   const content = getContent(id, defaultContent);
   const secondaryContent = secondaryId ? getContent(secondaryId, secondaryDefault) : '';
   const [tempContent, setTempContent] = useState(content);
@@ -46,12 +48,18 @@ export const EditableContent = ({
     }
   }, [secondaryContent, secondaryId]);
 
-  const handleSave = () => {
-    updateContent(id, tempContent);
-    if (secondaryId) {
-      updateContent(secondaryId, tempSecondary);
+  const handleSave = async () => {
+    try {
+      await updateContent(id, tempContent);
+      if (secondaryId) {
+        await updateContent(secondaryId, tempSecondary);
+      }
+    } catch (e) {
+      toast.error('Save failed');
+      console.error('[EditableContent] Save error:', e);
+    } finally {
+      setLocalEditing(false);
     }
-    setLocalEditing(false);
   };
 
   const handleCancel = () => {
@@ -64,7 +72,7 @@ export const EditableContent = ({
 
   const markdownClass = enableProse ? "prose prose-neutral max-w-none" : "w-full h-full [&>p]:m-0";
 
-  if (isEditing) {
+  if (editable) {
     return (
       <div className={`relative group ${localEditing ? 'z-50' : ''}`}>
         {!localEditing ? (

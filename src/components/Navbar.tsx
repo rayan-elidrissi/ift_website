@@ -1,54 +1,22 @@
-import React, { useState, useEffect } from "react";
-import { LogIn, LogOut, Menu, X, Edit3 } from "lucide-react";
+import React, { useState } from "react";
+import { LogIn, LogOut, Menu, X, LayoutDashboard, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Link, useLocation } from "react-router";
-import { supabase, isSupabaseConfigured } from "../lib/supabase";
-import { useCMS } from "../context/CMSContext";
+import { Link, useLocation, useNavigate } from "react-router";
+import { useAuth } from "../context/AuthContext";
+import { isGateConfigured } from "./PasswordGate";
 
 export const Navbar = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] =
-    useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, signOut, isAdmin } = useAuth();
   const location = useLocation();
-  const { isEditing, toggleEditMode, canEdit } = useCMS();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (isSupabaseConfigured() && supabase) {
-        const { data: { user } } = await supabase.auth.getUser();
-        setIsLoggedIn(!!user);
-        return;
-      }
-      setIsLoggedIn(!!localStorage.getItem("ift_auth"));
-    };
-
-    checkAuth();
-
-    window.addEventListener("ift_auth_change", checkAuth);
-    window.addEventListener("storage", checkAuth);
-
-    if (isSupabaseConfigured() && supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(() => checkAuth());
-      return () => {
-        subscription.unsubscribe();
-      };
-    }
-
-    return () => {
-      window.removeEventListener("ift_auth_change", checkAuth);
-      window.removeEventListener("storage", checkAuth);
-    };
-  }, []);
+  const navigate = useNavigate();
+  const isLoggedIn = !!user;
+  const gateConfigured = isGateConfigured();
 
   const handleLogout = async () => {
-    if (isSupabaseConfigured() && supabase) {
-      await supabase.auth.signOut();
-    }
-    localStorage.removeItem("ift_auth");
-    localStorage.removeItem("ift_role");
-    window.dispatchEvent(new Event("ift_auth_change"));
-    setIsLoggedIn(false);
+    await signOut();
     setIsMobileMenuOpen(false);
+    navigate(gateConfigured ? '/' : '/login');
   };
 
   const navLinks = [
@@ -115,46 +83,57 @@ export const Navbar = () => {
           </div>
 
           {/* Right Actions */}
-          <div className="hidden lg:flex items-center space-x-6 ml-12">
+          <div className="hidden lg:flex items-center space-x-6 ml-12 flex-shrink-0 relative z-[60]">
             {isLoggedIn ? (
               <>
-                {canEdit && (
-                  <button
-                    onClick={toggleEditMode}
-                    className={`p-2 rounded-full transition-colors ${
-                      isEditing ? 'bg-neutral-900 text-white hover:bg-red-600' : 'text-neutral-400 hover:text-teal-600'
-                    }`}
-                    title={isEditing ? 'Exit Edit Mode' : 'Enter Edit Mode'}
+                {isAdmin && (
+                  <Link
+                    to="/dashboard"
+                    className="text-neutral-400 hover:text-teal-600 transition-colors p-2 cursor-pointer rounded inline-flex items-center justify-center"
+                    title="Dashboard"
                   >
-                    <Edit3 className="w-5 h-5" />
+                    <LayoutDashboard className="w-5 h-5" />
+                  </Link>
+                )}
+                {gateConfigured ? (
+                  <button
+                    onClick={handleLogout}
+                    className="text-neutral-400 hover:text-teal-600 transition-colors p-2 cursor-pointer rounded inline-flex items-center justify-center"
+                    title="Verrouiller le site (revoir la porte mot de passe)"
+                  >
+                    <Lock className="w-5 h-5" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleLogout}
+                    className="text-neutral-400 hover:text-neutral-900 transition-colors p-2 cursor-pointer rounded"
+                    title="Sign Out"
+                  >
+                    <LogOut className="w-5 h-5" />
                   </button>
                 )}
-                <button
-                  onClick={handleLogout}
-                  className="text-neutral-400 hover:text-neutral-900 transition-colors p-2 rounded-full hover:bg-neutral-100"
-                  title="Sign Out"
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
               </>
             ) : (
-              <Link
-                to="/login"
-                className="text-neutral-400 hover:text-neutral-900 transition-colors"
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                className="text-neutral-400 hover:text-teal-600 transition-colors p-2 cursor-pointer rounded inline-flex items-center justify-center"
                 title="Log In"
               >
                 <LogIn className="w-5 h-5" />
-              </Link>
+              </button>
             )}
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="lg:hidden z-50 ml-auto">
+          <div className="lg:hidden z-[60] ml-auto">
             <button
               onClick={() =>
                 setIsMobileMenuOpen(!isMobileMenuOpen)
               }
-              className="text-neutral-900 hover:text-teal-600 transition-colors"
+              className="text-neutral-900 hover:text-teal-600 transition-colors p-3 cursor-pointer -m-3 touch-manipulation"
+              title={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              type="button"
             >
               {isMobileMenuOpen ? (
                 <X className="w-6 h-6" />
@@ -173,9 +152,9 @@ export const Navbar = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-white z-40 flex flex-col justify-center items-center"
+            className="fixed inset-0 bg-white z-[55] flex flex-col justify-center items-center"
           >
-            <div className="space-y-8 text-center">
+            <div className="space-y-8 text-center pointer-events-auto">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
@@ -187,22 +166,43 @@ export const Navbar = () => {
                 </Link>
               ))}
               {isLoggedIn ? (
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center justify-center gap-3 w-full text-center text-3xl font-serif text-neutral-400 hover:text-teal-600 transition-colors"
-                >
-                  <LogOut className="w-8 h-8" />
-                  <span>Sign Out</span>
-                </button>
+                <>
+                  {isAdmin && (
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center justify-center gap-3 text-3xl font-serif text-neutral-400 hover:text-teal-600 transition-colors py-4"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <LayoutDashboard className="w-8 h-8" />
+                      <span>Dashboard</span>
+                    </Link>
+                  )}
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center justify-center gap-3 w-full text-center text-3xl font-serif text-neutral-400 hover:text-teal-600 transition-colors py-4 cursor-pointer"
+                  >
+                    {gateConfigured ? (
+                      <>
+                        <Lock className="w-8 h-8" />
+                        <span>Verrouiller</span>
+                      </>
+                    ) : (
+                      <>
+                        <LogOut className="w-8 h-8" />
+                        <span>Sign Out</span>
+                      </>
+                    )}
+                  </button>
+                </>
               ) : (
-                <Link
-                  to="/login"
-                  className="flex items-center justify-center gap-3 text-3xl font-serif text-neutral-400 hover:text-teal-600 transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                <button
+                  type="button"
+                  onClick={() => { setIsMobileMenuOpen(false); navigate('/login'); }}
+                  className="flex items-center justify-center gap-3 text-3xl font-serif text-neutral-400 hover:text-teal-600 transition-colors py-4 cursor-pointer w-full"
                 >
                   <LogIn className="w-8 h-8" />
                   <span>Log In</span>
-                </Link>
+                </button>
               )}
             </div>
           </motion.div>

@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 
 type CMSContextType = {
   isEditing: boolean;
@@ -7,6 +9,7 @@ type CMSContextType = {
   getContent: (key: string, defaultContent: any) => any;
   updateContent: (key: string, newContent: any) => void;
   canEdit: boolean;
+  canEditKey: (key: string) => boolean;
   isLoading: boolean;
 };
 
@@ -33,10 +36,13 @@ function loadFromLocalStorage(): Record<string, any> {
 }
 
 export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
+  const { canEditAny, canEditKey } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [data, setData] = useState<Record<string, any>>({});
-  const [canEdit, setCanEdit] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // canEdit: any user with a role can enter edit mode
+  const canEdit = canEditAny;
 
   // Load data from Supabase or localStorage
   const loadData = React.useCallback(async () => {
@@ -58,23 +64,12 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           setData({});
         }
-
-        // Auth: Supabase user = can edit
-        const { data: { user } } = await supabase.auth.getUser();
-        setCanEdit(!!user);
-        if (!user) setIsEditing(false);
       } catch (e) {
         console.error('CMS load error:', e);
         setData(loadFromLocalStorage());
-        setCanEdit(false);
       }
     } else {
       setData(loadFromLocalStorage());
-      const role = localStorage.getItem('ift_role');
-      const auth = localStorage.getItem('ift_auth');
-      const canEditVal = !!(auth && (role === 'director' || role === 'admin' || role === 'staff'));
-      setCanEdit(canEditVal);
-      if (!canEditVal) setIsEditing(false);
     }
     setIsLoading(false);
   }, []);
@@ -83,63 +78,88 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
     loadData();
   }, [loadData]);
 
-  // Listen for auth changes
+  // Listen for auth changes (Supabase only)
   useEffect(() => {
-    if (!isSupabaseConfigured() || !supabase) {
-      const handleAuthChange = () => loadData();
-      window.addEventListener('ift_auth_change', handleAuthChange);
-      window.addEventListener('storage', handleAuthChange);
-      return () => {
-        window.removeEventListener('ift_auth_change', handleAuthChange);
-        window.removeEventListener('storage', handleAuthChange);
-      };
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      loadData();
-    });
+    if (!isSupabaseConfigured() || !supabase) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => loadData());
     return () => subscription.unsubscribe();
   }, [loadData]);
 
   const toggleEditMode = () => {
     if (canEdit) {
-      setIsEditing(!isEditing);
+      setIsEditing((prev) => !prev);
     }
   };
+
+  // Reset edit mode when user loses admin access
+  useEffect(() => {
+    if (!canEdit) setIsEditing(false);
+  }, [canEdit]);
 
   const getContent = (key: string, defaultContent: any) => {
     return data[key] !== undefined ? data[key] : defaultContent;
   };
 
   const updateContent = async (key: string, newContent: any) => {
-    const newData = { ...data, [key]: newContent };
-    setData(newData);
+    if (!canEditKey(key)) {
+      toast.error(`You don't have permission to edit "${key}"`);
+      return;
+    }
+    setData((prev) => ({ ...prev, [key]: newContent }));
 
     if (isSupabaseConfigured() && supabase) {
+      // Diagnostic en dev : si save échoue, vérifier hasSession, role (profiles.role) et URL Supabase
+      if (import.meta.env.DEV) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const url = import.meta.env.VITE_SUPABASE_URL ?? '';
+        console.debug('[CMS] Save attempt:', {
+          key,
+          hasSession: !!session,
+          userId: session?.user?.id?.slice(0, 8),
+          supabaseProject: url ? new URL(url).hostname : 'not set',
+        });
+      }
       try {
         const { error } = await supabase
           .from('cms_content')
-          .upsert({
-            key,
-            value: newContent,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'key' });
+          .upsert(
+            {
+              key,
+              value: newContent,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'key' }
+          );
 
         if (error) {
-          console.error('Failed to save CMS data:', error);
-          localStorage.setItem('ift_cms_data', JSON.stringify(newData));
+          console.error('[CMS] Save failed:', error.message, { code: error.code, details: error.details });
+          setData((prev) => {
+            localStorage.setItem('ift_cms_data', JSON.stringify({ ...prev, [key]: newContent }));
+            return prev;
+          });
+          toast.error(`Could not save to cloud: ${error.message}`);
+        } else {
+          toast.success('Saved to cloud');
         }
       } catch (e) {
-        console.error('CMS save error:', e);
-        localStorage.setItem('ift_cms_data', JSON.stringify(newData));
+        console.error('[CMS] Save error:', e);
+        setData((prev) => {
+          localStorage.setItem('ift_cms_data', JSON.stringify({ ...prev, [key]: newContent }));
+          return prev;
+        });
+        toast.error('Could not save to cloud. Changes saved locally.');
       }
     } else {
-      localStorage.setItem('ift_cms_data', JSON.stringify(newData));
+      setData((prev) => {
+        const merged = { ...prev, [key]: newContent };
+        localStorage.setItem('ift_cms_data', JSON.stringify(merged));
+        return merged;
+      });
     }
   };
 
   return (
-    <CMSContext.Provider value={{ isEditing, toggleEditMode, getContent, updateContent, canEdit, isLoading }}>
+    <CMSContext.Provider value={{ isEditing, toggleEditMode, getContent, updateContent, canEdit, canEditKey, isLoading }}>
       {children}
     </CMSContext.Provider>
   );
