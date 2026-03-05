@@ -1,6 +1,6 @@
 import React from 'react';
 import { CMSProvider, useCMS } from '../../context/CMSContext';
-import { Edit3, X } from 'lucide-react';
+import { Edit3, Loader2, X } from 'lucide-react';
 
 const CMSToggle = () => {
   const { isEditing, toggleEditMode, canEdit } = useCMS();
@@ -22,11 +22,29 @@ const CMSToggle = () => {
   );
 };
 
+const CMSContent = ({ children }: { children: React.ReactNode }) => {
+  const { isLoading, isApiConfigured } = useCMS();
+
+  if (isApiConfigured && isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <Loader2 className="w-10 h-10 animate-spin text-teal-600" aria-hidden />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {children}
+      <CMSToggle />
+    </>
+  );
+};
+
 export const CMSWrapper = ({ children }: { children: React.ReactNode }) => {
   return (
     <CMSProvider>
-      {children}
-      <CMSToggle />
+      <CMSContent>{children}</CMSContent>
     </CMSProvider>
   );
 };
