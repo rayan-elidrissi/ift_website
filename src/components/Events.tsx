@@ -263,6 +263,10 @@ const misc = [
   }
 ];
 
+// Helper to normalize array-or-comma-separated-string to string[]
+const toArray = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter(Boolean).map(String) : (typeof v === 'string' ? (v || '').split(',').map(s => s.trim()).filter(Boolean) : []);
+
 // Custom Arrow Components
 const CustomArrow = ({ onClick, direction }: { onClick?: () => void; direction: 'prev' | 'next' }) => (
   direction === 'prev' ? null :
@@ -708,7 +712,7 @@ export const Events = () => {
               <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
                 <div className="mb-6">
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {viewingTalk.tags.map((tag: string) => (
+                    {toArray(viewingTalk.tags).map((tag: string) => (
                       <span key={tag} className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm">
                         {tag}
                       </span>
@@ -806,7 +810,7 @@ export const Events = () => {
               <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
                 <div className="mb-6">
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {viewingFestival.tags.map((tag: string) => (
+                    {toArray(viewingFestival.tags).map((tag: string) => (
                       <span key={tag} className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm">
                         {tag}
                       </span>
@@ -835,7 +839,7 @@ export const Events = () => {
                     
                     <h3 className="text-lg font-bold text-neutral-900 mt-6 mb-3">Festival Highlights</h3>
                     <ul className="space-y-2">
-                      {viewingFestival.highlights.map((highlight: string, i: number) => (
+                      {toArray(viewingFestival.highlights).map((highlight: string, i: number) => (
                         <li key={i} className="text-neutral-600 text-base">{highlight}</li>
                       ))}
                     </ul>
@@ -900,7 +904,7 @@ export const Events = () => {
               <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
                 <div className="mb-6">
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {viewingMisc.tags.map((tag: string) => (
+                    {toArray(viewingMisc.tags).map((tag: string) => (
                       <span key={tag} className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm">
                         {tag}
                       </span>
@@ -937,7 +941,7 @@ export const Events = () => {
                       <>
                         <h3 className="text-lg font-bold text-neutral-900 mt-6 mb-3">Team Members</h3>
                         <div className="flex flex-wrap gap-2">
-                          {viewingMisc.team.map((member: string, i: number) => (
+                          {toArray(viewingMisc.team).map((member: string, i: number) => (
                             <span key={i} className="px-3 py-1 bg-neutral-100 text-neutral-700 text-sm rounded-full">
                               {member}
                             </span>
