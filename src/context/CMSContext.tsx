@@ -1,16 +1,30 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import * as api from '../lib/api';
+import { PAGE_SLUGS, getSlugForKey, SLUG_TO_KEYS } from '../lib/resourceMapping';
+
+const LEGACY_BLOCK_TYPE = 'legacy_cms';
+
+type ResourceVersion = 'Draft' | 'Published';
 
 type CMSContextType = {
   isEditing: boolean;
   toggleEditMode: () => void;
   getContent: (key: string, defaultContent: any) => any;
   updateContent: (key: string, newContent: any) => void;
+  /** Resource API: fetch by slug (when VITE_API_URL is set) */
+  getResource: (slug: string, version?: ResourceVersion) => Promise<api.ResourceOut | null>;
+  /** Resource API: save Draft (PUT) */
+  saveChanges: (slug: string, data: api.ResourceIn) => Promise<boolean>;
+  /** Resource API: mark for publication (PATCH) */
+  sendForReview: (slug: string) => Promise<boolean>;
+  /** Resource API: publish (GET /publish_resources) */
+  publish: (slug: string) => Promise<boolean>;
   canEdit: boolean;
   canEditKey: (key: string) => boolean;
   isLoading: boolean;
+  isApiConfigured: boolean;
 };
 
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
@@ -23,66 +37,51 @@ export const useCMS = () => {
   return context;
 };
 
-function loadFromLocalStorage(): Record<string, any> {
-  const savedData = localStorage.getItem('ift_cms_data');
-  if (savedData) {
-    try {
-      return JSON.parse(savedData);
-    } catch (e) {
-      console.error('Failed to parse CMS data', e);
-    }
-  }
-  return {};
-}
-
 export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
   const { canEditAny, canEditKey } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [data, setData] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // canEdit: any user with a role can enter edit mode
   const canEdit = canEditAny;
 
-  // Load data from Supabase or localStorage
   const loadData = React.useCallback(async () => {
-    if (isSupabaseConfigured() && supabase) {
-      try {
-        const { data: rows, error } = await supabase
-          .from('cms_content')
-          .select('key, value');
-
-        if (error) {
-          console.error('Failed to load CMS data:', error);
-          setData(loadFromLocalStorage());
-        } else if (rows && rows.length > 0) {
-          const merged: Record<string, any> = {};
-          for (const row of rows) {
-            merged[row.key] = row.value;
-          }
-          setData(merged);
-        } else {
-          setData({});
-        }
-      } catch (e) {
-        console.error('CMS load error:', e);
-        setData(loadFromLocalStorage());
-      }
-    } else {
-      setData(loadFromLocalStorage());
+    if (!api.isApiConfigured()) {
+      setData({});
+      setIsLoading(false);
+      return;
     }
+    const merged: Record<string, any> = {};
+    for (const slug of PAGE_SLUGS) {
+      try {
+        // Editors see Draft first (their unpublished changes); public sees Published first
+        const resource = canEdit
+          ? (await api.getResourceOptional(slug, 'Draft') ?? await api.getResourceOptional(slug, 'Published'))
+          : (await api.getResourceOptional(slug, 'Published') ?? await api.getResourceOptional(slug, 'Draft'));
+        if (resource?.content) {
+          for (const block of resource.content as any[]) {
+            if (block?.type === LEGACY_BLOCK_TYPE && block.data) {
+              Object.assign(merged, block.data);
+              break;
+            }
+          }
+        }
+      } catch {
+        // skip failed slug
+      }
+    }
+    setData(merged);
     setIsLoading(false);
-  }, []);
+  }, [canEdit]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Listen for auth changes (Supabase only)
   useEffect(() => {
-    if (!isSupabaseConfigured() || !supabase) return;
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => loadData());
-    return () => subscription.unsubscribe();
+    const handler = () => loadData();
+    window.addEventListener('ift_auth_change', handler);
+    return () => window.removeEventListener('ift_auth_change', handler);
   }, [loadData]);
 
   const toggleEditMode = () => {
@@ -91,7 +90,6 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Reset edit mode when user loses admin access
   useEffect(() => {
     if (!canEdit) setIsEditing(false);
   }, [canEdit]);
@@ -107,59 +105,123 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
     }
     setData((prev) => ({ ...prev, [key]: newContent }));
 
-    if (isSupabaseConfigured() && supabase) {
-      // Diagnostic en dev : si save échoue, vérifier hasSession, role (profiles.role) et URL Supabase
-      if (import.meta.env.DEV) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const url = import.meta.env.VITE_SUPABASE_URL ?? '';
-        console.debug('[CMS] Save attempt:', {
-          key,
-          hasSession: !!session,
-          userId: session?.user?.id?.slice(0, 8),
-          supabaseProject: url ? new URL(url).hostname : 'not set',
-        });
+    if (!api.isApiConfigured()) {
+      toast.error('API non configurée. Définissez VITE_API_URL.');
+      return;
+    }
+    const slug = getSlugForKey(key);
+    if (!slug) {
+      toast.error(`No resource mapping for "${key}"`);
+      return;
+    }
+    try {
+      const resource = await api.getResource(slug, 'Draft') ?? await api.getResource(slug, 'Published');
+      if (!resource) {
+        toast.error('Resource non trouvée. Lancez la migration depuis /migrate');
+        loadData();
+        return;
       }
-      try {
-        const { error } = await supabase
-          .from('cms_content')
-          .upsert(
-            {
-              key,
-              value: newContent,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: 'key' }
-          );
-
-        if (error) {
-          console.error('[CMS] Save failed:', error.message, { code: error.code, details: error.details });
-          setData((prev) => {
-            localStorage.setItem('ift_cms_data', JSON.stringify({ ...prev, [key]: newContent }));
-            return prev;
-          });
-          toast.error(`Could not save to cloud: ${error.message}`);
-        } else {
-          toast.success('Saved to cloud');
+      const content = Array.isArray(resource.content) ? [...resource.content] : [];
+      let found = false;
+      for (let i = 0; i < content.length; i++) {
+        const b = content[i] as any;
+        if (b?.type === LEGACY_BLOCK_TYPE) {
+          content[i] = { ...b, data: { ...(b.data || {}), [key]: newContent } };
+          found = true;
+          break;
         }
-      } catch (e) {
-        console.error('[CMS] Save error:', e);
-        setData((prev) => {
-          localStorage.setItem('ift_cms_data', JSON.stringify({ ...prev, [key]: newContent }));
-          return prev;
-        });
-        toast.error('Could not save to cloud. Changes saved locally.');
       }
-    } else {
-      setData((prev) => {
-        const merged = { ...prev, [key]: newContent };
-        localStorage.setItem('ift_cms_data', JSON.stringify(merged));
-        return merged;
+      if (!found) {
+        content.push({ type: LEGACY_BLOCK_TYPE, uuid: `legacy-${slug}`, data: { [key]: newContent } });
+      }
+      await api.updateResource(slug, {
+        authors: resource.authors,
+        tags: resource.tags,
+        title: resource.title,
+        subtitle: resource.subtitle,
+        abstract: resource.abstract,
+        logo: resource.logo,
+        banner: resource.banner,
+        content,
+        bibliography: resource.bibliography,
       });
+      toast.success('Saved');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Could not save.';
+      if (msg.includes('fetch') || msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        toast.error('API inaccessible. Vérifiez que le backend tourne (npm run backend).');
+      } else {
+        toast.error(msg);
+      }
+      loadData();
+    }
+  };
+
+  const getResource = async (slug: string, version: ResourceVersion = 'Published') => {
+    if (!api.isApiConfigured()) return null;
+    try {
+      return await api.getResource(slug, version);
+    } catch (e) {
+      console.error('[CMS] getResource error:', e);
+      return null;
+    }
+  };
+
+  const saveChanges = async (slug: string, data: api.ResourceIn) => {
+    if (!api.isApiConfigured()) {
+      toast.error('API not configured');
+      return false;
+    }
+    if (!canEdit) {
+      toast.error('You don\'t have permission to edit');
+      return false;
+    }
+    try {
+      await api.updateResource(slug, data);
+      toast.success('Saved');
+      return true;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not save');
+      return false;
+    }
+  };
+
+  const sendForReview = async (slug: string) => {
+    if (!api.isApiConfigured()) {
+      toast.error('API not configured');
+      return false;
+    }
+    try {
+      await api.sendForReview(slug);
+      toast.success('Marked for publication');
+      return true;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not send for review');
+      return false;
+    }
+  };
+
+  const publish = async (slug: string) => {
+    if (!api.isApiConfigured()) {
+      toast.error('API not configured');
+      return false;
+    }
+    try {
+      await api.publishResource(slug);
+      toast.success('Published');
+      return true;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not publish');
+      return false;
     }
   };
 
   return (
-    <CMSContext.Provider value={{ isEditing, toggleEditMode, getContent, updateContent, canEdit, canEditKey, isLoading }}>
+    <CMSContext.Provider value={{
+      isEditing, toggleEditMode, getContent, updateContent,
+      getResource, saveChanges, sendForReview, publish,
+      canEdit, canEditKey, isLoading, isApiConfigured: api.isApiConfigured(),
+    }}>
       {children}
     </CMSContext.Provider>
   );

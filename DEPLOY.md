@@ -1,85 +1,76 @@
-# Deploy IFT Website to Vercel with Online CMS
+# Deploy IFT Website
 
-This guide walks you through deploying the site to Vercel and enabling online content editing via Supabase.
+This guide covers deploying the frontend (Vercel) and backend (Railway, Render, etc.) when using the API for CMS content.
 
-## 1. Create a Supabase Project
+---
 
-1. Go to [supabase.com](https://supabase.com) and create a free account.
-2. Create a new project (choose a region close to your users).
-3. Wait for the project to be ready, then go to **Project Settings** → **API**.
-4. Copy:
-   - **Project URL** → `VITE_SUPABASE_URL`
-   - **anon public** key → `VITE_SUPABASE_ANON_KEY`
+## Overview
 
-## 2. Create the Database Schema
+| Component | Host | Notes |
+|-----------|------|------|
+| **Frontend** (React/Vite) | Vercel | Static + SPA |
+| **Backend** (FastAPI) | Railway, Render, Fly.io | Needs persistent storage for `db/` |
 
-Run the migrations in order (SQL Editor → New query):
+Vercel cannot run the backend (no persistent disk). Deploy the backend first, then the frontend with `VITE_API_URL` pointing to it.
 
-1. **001_create_cms_content.sql** – Creates `cms_content` table.
-2. **002_create_profiles_and_roles.sql** – Creates `profiles` table and auto-creates a profile on signup.
-3. **003_cms_content_require_admin.sql** – Restricts CMS edits to admins (temporary, superseded by 004).
-4. **004_add_role_admin_staff_students.sql** – Adds 3 roles with section-based permissions.
-5. **005_align_can_edit_cms_key_research_projects.sql** – Aligns DB permissions with client (research-projects → featured section).
-6. **006_seed_cms_content_defaults.sql** – Seeds default CMS content keys (optional; skips keys that already exist).
+---
 
-### Role permissions
+## Step 1: Deploy the Backend
 
-| Role      | Sections modifiable                                                         |
-|-----------|------------------------------------------------------------------------------|
-| **admin**   | All (hero, featured, about, research, arts, education, events, collaborate, footer) |
-| **staff**   | About, Research, Arts, Education, Events                                     |
-| **students** | Education only                                                             |
+The backend stores CMS data in `backend/db/` (JSON files). Choose a host with persistent storage.
 
-- Only users with a role can edit the CMS.
-- Only **admin** can access `/dashboard` and assign roles.
+### Option A: Railway
 
-### Assign roles
+1. Go to [railway.app](https://railway.app) and create a project.
+2. **Add Service** → **GitHub Repo** → select your repo.
+3. Set **Root Directory**: `backend`
+4. Add a start command or use a `Procfile`:
+   ```
+   web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+   ```
+5. Add environment variables (Settings → Variables):
+   - `CORS_ORIGINS` = `https://your-app.vercel.app` (add your Vercel URL)
+   - `FRONTEND_URL` = `https://your-app.vercel.app`
+   - `JWT_SECRET` = generate a random string (e.g. `openssl rand -hex 32`)
+6. Railway assigns a URL like `https://xxx.railway.app`. Note it.
 
-```sql
--- Promote to admin
-UPDATE public.profiles SET role = 'admin' WHERE email = 'your@email.com';
+### Option B: Render
 
--- Assign staff (about, research, arts, education, events)
-UPDATE public.profiles SET role = 'staff' WHERE email = 'staff@ift.edu';
+1. Go to [render.com](https://render.com) → **New** → **Web Service**.
+2. Connect your repo, set **Root Directory** to `backend`.
+3. **Build Command**: `pip install -r requirements.txt`
+4. **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5. Add environment variables (same as Railway).
+6. Use the provided `.onrender.com` URL.
 
--- Assign students (education only)
-UPDATE public.profiles SET role = 'students' WHERE email = 'student@ift.edu';
-```
+### Option C: Fly.io
 
-## 3. Configure Supabase Auth URLs
+1. Install [flyctl](https://fly.io/docs/hands-on/install-flyctl/).
+2. In `backend/`, run `fly launch`.
+3. Add a `fly.toml` with a persistent volume for `db/` if needed.
+4. Set secrets: `fly secrets set CORS_ORIGINS=... FRONTEND_URL=... JWT_SECRET=...`
 
-1. Go to **Authentication** → **URL Configuration**.
-2. Set **Site URL** to your Vercel deployment (e.g. `https://your-project.vercel.app`).
-3. Add to **Redirect URLs**:
-   - `https://your-project.vercel.app/**` (email confirmation links)
-   - `https://your-project.vercel.app/auth/callback` (Google OAuth callback)
+---
 
-For **Google OAuth**, also enable the provider in **Authentication** → **Providers** → **Google** and add the callback URL above.
-
-## 4. Enable Email Auth (Optional)
-
-By default, Supabase email confirmation is enabled. For faster setup:
-
-1. Go to **Authentication** → **Providers** → **Email**.
-2. You can disable **Confirm email** for testing (not recommended for production).
-
-To add your first editor:
-1. Go to **Authentication** → **Users**.
-2. Click **Add user** → **Create new user**.
-3. Enter email and password, then create the user.
-4. Or use the **Sign up** link on the Login page of your deployed site.
-
-## 5. Deploy to Vercel
+## Step 2: Deploy the Frontend to Vercel
 
 ### Option A: Import from Git
 
 1. Push your project to GitHub.
-2. Go to [vercel.com](https://vercel.com) and **Add New** → **Project**.
+2. Go to [vercel.com](https://vercel.com) → **Add New** → **Project**.
 3. Import your repository.
-4. Vercel will auto-detect Vite. The build settings should be:
-   - **Build Command:** `npm run build`
-   - **Output Directory:** `build`
-5. Add Environment Variables (see below).
+4. Build settings:
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `build` (Vite is configured with `outDir: 'build'`)
+   - **Install Command**: `npm install`
+5. Add environment variables:
+
+   | Variable | Value |
+   |----------|-------|
+   | `VITE_API_URL` | `https://your-backend.railway.app` (your backend URL from Step 1) |
+   | `VITE_GATE_PASSWORD` | (optional) Password for edit access |
+   | `VITE_ADMIN_EMAIL` | (optional) e.g. `admin@example.com` |
+
 6. Click **Deploy**.
 
 ### Option B: Vercel CLI
@@ -87,38 +78,65 @@ To add your first editor:
 ```bash
 npm i -g vercel
 vercel
-# Follow prompts, add env vars when asked
+
+# When prompted, add:
+# - VITE_API_URL = https://your-backend.railway.app
+# - VITE_GATE_PASSWORD (optional)
+# - VITE_ADMIN_EMAIL (optional)
 ```
 
-## 6. Environment Variables
+---
 
-**Local development**: Copy `.env.example` to `.env` and fill in your Supabase values:
+## Step 3: Update Backend CORS
 
-```bash
-cp .env.example .env
+After the first Vercel deploy, you have a URL like `https://your-project.vercel.app`. Update the backend:
+
+- Set `CORS_ORIGINS` = `https://your-project.vercel.app`
+- Set `FRONTEND_URL` = `https://your-project.vercel.app`
+
+Redeploy the backend if needed. For multiple origins (preview URLs), use a comma-separated list:
+
+```
+CORS_ORIGINS=https://your-project.vercel.app,https://your-project-*.vercel.app
 ```
 
-**Vercel**: In your project **Settings** → **Environment Variables**:
+---
 
-| Name | Value | Environments |
-|------|-------|--------------|
-| `VITE_SUPABASE_URL` | `https://your-project.supabase.co` | Production, Preview |
-| `VITE_SUPABASE_ANON_KEY` | Your anon key from Supabase | Production, Preview |
-| `VITE_GATE_PASSWORD` | (optional) Single password for gate; if set with `VITE_ADMIN_EMAIL`, replaces Login form | Production, Preview |
-| `VITE_ADMIN_EMAIL` | (optional) Email used when gate password is validated | Production, Preview |
+## Step 4: Migrate Content (if needed)
 
-**Password Gate**: If both `VITE_GATE_PASSWORD` and `VITE_ADMIN_EMAIL` are set, visitors see a single password prompt instead of the Login form. After entering the correct password, the app signs in with that email. Leave both empty to use the standard Login form.
+If you have content in localStorage from local development:
 
-Redeploy after adding env vars for them to take effect.
+1. Run migration locally first (backend + frontend running).
+2. Copy `backend/db/` to your production backend, or deploy the backend from a commit that includes the migrated `db/` folder. Alternatively, run the migration once against the production API (you’d need to expose `/migrate` or run it locally with `VITE_API_URL` pointing to production — use with caution).
 
-## 7. Using the CMS Online
+---
 
-1. Visit your deployed site (e.g. `https://your-project.vercel.app`).
-2. Go to **Login** and sign in with an account that has a role (see "Assign roles" above).
-3. Users with a role (admin, staff, or students) see the green **Edit** button; click it to enter edit mode.
-4. Click editable fields to change content.
-5. Click **Save Changes** in modals to save. Content is stored in Supabase and shared for all visitors.
+## Environment Variables Summary
 
-## Fallback Without Supabase
+### Frontend (Vercel)
 
-If `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are not set, the app uses **localStorage** for the CMS. Changes stay only in that browser and are not shared or persistent across deployments.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_API_URL` | Yes (with backend) | Full backend URL, e.g. `https://api-xyz.railway.app` |
+| `VITE_GATE_PASSWORD` | No | Password for edit access |
+| `VITE_ADMIN_EMAIL` | No | Admin email shown in UI |
+
+### Backend (Railway / Render / Fly)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `CORS_ORIGINS` | Yes | Comma-separated frontend URLs |
+| `FRONTEND_URL` | Yes | Frontend URL (for OAuth redirects) |
+| `JWT_SECRET` | Yes | Random string for JWT signing |
+| `DB_PATH` | No | Default `./db` |
+| `DB_UPLOAD_BASE_PATH` | No | Default `./uploads` |
+
+---
+
+## Without Backend (localStorage only)
+
+If you skip the backend and use localStorage:
+
+- Leave `VITE_API_URL` empty.
+- Deploy only the frontend to Vercel.
+- Content is stored in the browser; changes are not shared across devices.

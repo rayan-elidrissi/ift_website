@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, ArrowRight, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 const GATE_PASSWORD = import.meta.env.VITE_GATE_PASSWORD ?? '';
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL ?? '';
@@ -17,15 +16,11 @@ export const PasswordGate = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!GATE_PASSWORD || !ADMIN_EMAIL) {
-      setError('Gate not configured. Set VITE_GATE_PASSWORD and VITE_ADMIN_EMAIL.');
+      setError('Gate not configured. Set VITE_GATE_PASSWORD and VITE_ADMIN_EMAIL in .env');
       return;
     }
     if (password.trim() !== GATE_PASSWORD) {
       setError('Mot de passe incorrect.');
-      return;
-    }
-    if (!isSupabaseConfigured() || !supabase) {
-      setError('Supabase non configuré. Vérifiez .env.');
       return;
     }
 
@@ -33,37 +28,7 @@ export const PasswordGate = () => {
     setError('');
 
     try {
-      const signInPromise = supabase.auth.signInWithPassword({
-        email: ADMIN_EMAIL.trim().toLowerCase(),
-        password: GATE_PASSWORD,
-      });
-      const signInTimeout = new Promise<never>((_, rej) =>
-        setTimeout(() => rej(new Error('Connexion trop longue. Réessayez ou vérifiez le réseau.')), 15000)
-      );
-      const { data: authData, error: err } = await Promise.race([signInPromise, signInTimeout]);
-      if (err) throw err;
-      if (!authData?.session) {
-        setError('Session non reçue. Vérifiez la confirmation email dans Supabase.');
-        return;
-      }
-
-      let profile: { role?: string } | null = null;
-      const profileTimeout = 8000;
-      try {
-        const profilePromise = supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', authData.user.id)
-          .single();
-        const timeoutPromise = new Promise<never>((_, rej) =>
-          setTimeout(() => rej(new Error('Profile fetch timeout')), profileTimeout)
-        );
-        const result = await Promise.race([profilePromise, timeoutPromise]);
-        profile = result.data;
-      } catch {
-        profile = null;
-      }
-
+      sessionStorage.setItem('ift_local_admin', '1');
       window.dispatchEvent(new Event('ift_auth_change'));
       setPassword('');
     } catch (err: unknown) {

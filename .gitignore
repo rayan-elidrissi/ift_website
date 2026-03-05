@@ -3,3 +3,8 @@ node_modules
 .env.local
 
 .vercel
+
+# Backend DB (file-based storage)
+backend/db/*
+!backend/db/.gitkeep
+backend/uploads/

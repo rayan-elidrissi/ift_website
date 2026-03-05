@@ -15,6 +15,7 @@ import { Collaborate } from './components/Collaborate';
 import { Login } from './components/Login';
 import { AuthCallback } from './components/AuthCallback';
 import { Dashboard } from './components/Dashboard';
+import { Migrate } from './components/Migrate';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Footer } from './components/Footer';
 import { CMSWrapper } from './components/cms/CMSWrapper';
@@ -71,6 +72,11 @@ const AppContent = () => {
               <Route path="/dashboard" element={
                 <ProtectedRoute requireAdmin>
                   <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/migrate" element={
+                <ProtectedRoute requireAdmin>
+                  <Migrate />
                 </ProtectedRoute>
               } />
             </Routes>

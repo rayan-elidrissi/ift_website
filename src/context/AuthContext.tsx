@@ -1,11 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useMemo, useRef } from 'react';
-import { User } from '@supabase/supabase-js';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { signOut as authSignOut } from '../lib/auth.service';
+import { getAuthUser, apiLogout, isApiConfigured } from '../lib/api';
 import { canEditKey as checkCanEditKey, CMSRole } from '../lib/cmsPermissions';
-
 import { isGateConfigured } from '../components/PasswordGate';
 
 export type Profile = {
@@ -18,7 +16,7 @@ export type Profile = {
 };
 
 type AuthContextType = {
-  user: User | null;
+  user: { id: string } | null;
   profile: Profile | null;
   loading: boolean;
   profileError: string | null;
@@ -42,97 +40,68 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<{ id: string } | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const lastUserId = useRef<string | null>(null);
-
-  const fetchProfile = useMemo(
-    () => async (userId: string): Promise<{ profile: Profile | null; error: string | null }> => {
-      if (!supabase) return { profile: null, error: null };
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, avatar_url, role, updated_at')
-        .eq('id', userId)
-        .single();
-      if (error) {
-        console.error('[Auth] Profile fetch failed:', error.message, error.code);
-        return { profile: null, error: error.message };
-      }
-      return { profile: data as Profile, error: null };
-    },
-    []
-  );
 
   useEffect(() => {
-    const checkUser = async () => {
-      if (!isSupabaseConfigured() || !supabase) {
-        setUser(null);
-        setProfile(null);
-        setProfileError(null);
-        setLoading(false);
-        return;
-      }
-      try {
-        const { data: { user: currentUser }, error } = await supabase.auth.getUser();
-        if (error || !currentUser) {
-          setUser(null);
-          setProfile(null);
+    const checkSession = async () => {
+      // 1. If API configured, try to get user from backend (OAuth JWT)
+      if (isApiConfigured()) {
+        const apiUser = await getAuthUser();
+        if (apiUser) {
+          setUser({ id: apiUser.user_id });
+          setProfile({
+            id: apiUser.user_id,
+            email: apiUser.email ?? null,
+            full_name: apiUser.username ?? null,
+            avatar_url: null,
+            role: apiUser.is_admin ? 'admin' : 'staff',
+            updated_at: null,
+          });
           setProfileError(null);
-          lastUserId.current = null;
-        } else {
-          setUser(currentUser);
-          lastUserId.current = currentUser.id;
-          const { profile: p, error: profileErr } = await fetchProfile(currentUser.id);
-          setProfile(p);
-          setProfileError(profileErr ?? null);
+          setLoading(false);
+          return;
         }
-      } catch {
+      }
+      // 2. Fallback: password gate (local)
+      const hasLocalAdmin = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('ift_local_admin') === '1';
+      if (hasLocalAdmin && isGateConfigured()) {
+        setUser({ id: 'local-admin' });
+        setProfile({
+          id: 'local-admin',
+          email: import.meta.env.VITE_ADMIN_EMAIL ?? null,
+          full_name: null,
+          avatar_url: null,
+          role: 'admin',
+          updated_at: null,
+        });
+        setProfileError(null);
+      } else {
         setUser(null);
         setProfile(null);
         setProfileError(null);
-        lastUserId.current = null;
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     };
 
-    checkUser();
+    checkSession();
 
-    if (supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (_event, session) => {
-          const newUser = session?.user ?? null;
-          const newUserId = newUser?.id ?? null;
-          setUser(newUser);
-          if (newUser) {
-            const { profile: p, error: profileErr } = await fetchProfile(newUser.id);
-            setProfile(p);
-            setProfileError(profileErr ?? null);
-          } else {
-            setProfile(null);
-            setProfileError(null);
-          }
-          setLoading(false);
-          if (newUserId !== lastUserId.current) {
-            lastUserId.current = newUserId;
-            window.dispatchEvent(new Event('ift_auth_change'));
-          }
-        }
-      );
-      return () => subscription.unsubscribe();
-    }
-  }, [fetchProfile]);
+    const handler = () => checkSession();
+    window.addEventListener('ift_auth_change', handler);
+    return () => window.removeEventListener('ift_auth_change', handler);
+  }, []);
 
   const signOut = async () => {
+    if (isApiConfigured()) {
+      await apiLogout();
+    }
     await authSignOut();
     setUser(null);
     setProfile(null);
     setProfileError(null);
-    lastUserId.current = null;
     window.dispatchEvent(new Event('ift_auth_change'));
-    // Navigation to /login is handled by the calling component (Navbar, Dashboard, etc.)
   };
 
   const role = (profile?.role as CMSRole) ?? null;
