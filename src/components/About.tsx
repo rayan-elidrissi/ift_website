@@ -25,24 +25,26 @@ export const About = () => {
                 transition={{ duration: 0.8, ease: "easeOut" }}
               >
                 <div className="mb-16">
-                  <motion.h1
+                  <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="text-5xl md:text-7xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
+                    role="heading"
+                    aria-level={1}
                   >
                     <EditableContent
                       id="about-title"
                       defaultContent="About"
                       enableProse={false}
                     />
-                  </motion.h1>
-                  <p className="text-lg md:text-xl text-neutral-500 font-serif italic mb-8 leading-relaxed max-w-lg">
+                  </motion.div>
+                  <div className="text-lg md:text-xl text-neutral-500 font-serif italic mb-8 leading-relaxed max-w-lg">
                     <EditableContent
                       id="about-subtitle"
                       defaultContent="Institute for Future Technologies"
                       enableProse={false}
                     />
-                  </p>
+                  </div>
                   <div className="font-sans text-neutral-500 text-sm md:text-base leading-relaxed border-l-2 border-teal-600 pl-6">
                     <EditableContent
                       id="about-intro"
@@ -53,30 +55,30 @@ export const About = () => {
 
                 <div className="space-y-8 font-sans">
                   <div className="group">
-                    <h4 className="flex items-center gap-3 font-bold text-neutral-900 mb-2 uppercase tracking-widest text-xs">
+                    <div className="flex items-center gap-3 font-bold text-neutral-900 mb-2 uppercase tracking-widest text-xs" role="heading" aria-level={4}>
                       <span className="w-1.5 h-1.5 bg-teal-600 rounded-full"></span>
                       <EditableContent id="about-pillar-1-title" defaultContent="Human-Centered Design" enableProse={false} />
-                    </h4>
+                    </div>
                     <div className="text-neutral-500 text-sm pl-4.5">
                       <EditableContent id="about-pillar-1-desc" defaultContent="Focusing on technology that serves humanity and improves lives." />
                     </div>
                   </div>
 
                   <div className="group">
-                    <h4 className="flex items-center gap-3 font-bold text-neutral-900 mb-2 uppercase tracking-widest text-xs">
+                    <div className="flex items-center gap-3 font-bold text-neutral-900 mb-2 uppercase tracking-widest text-xs" role="heading" aria-level={4}>
                       <span className="w-1.5 h-1.5 bg-teal-600 rounded-full"></span>
                       <EditableContent id="about-pillar-2-title" defaultContent="Sustainable Future" enableProse={false} />
-                    </h4>
+                    </div>
                     <div className="text-neutral-500 text-sm pl-4.5">
                       <EditableContent id="about-pillar-2-desc" defaultContent="Developing solutions with long-term environmental perspectives." />
                     </div>
                   </div>
 
                   <div className="group">
-                    <h4 className="flex items-center gap-3 font-bold text-neutral-900 mb-2 uppercase tracking-widest text-xs">
+                    <div className="flex items-center gap-3 font-bold text-neutral-900 mb-2 uppercase tracking-widest text-xs" role="heading" aria-level={4}>
                       <span className="w-1.5 h-1.5 bg-teal-600 rounded-full"></span>
                       <EditableContent id="about-pillar-3-title" defaultContent="Hands-on Learning" enableProse={false} />
-                    </h4>
+                    </div>
                     <div className="text-neutral-500 text-sm pl-4.5">
                       <EditableContent id="about-pillar-3-desc" defaultContent="Learning by doing through our various labs and workshops." />
                     </div>

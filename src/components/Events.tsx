@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, Calendar, MapPin, Users, X, ExternalLink, Ticket } from 'lucide-react';
+import { ChevronRight, Calendar, MapPin, Users, X, ExternalLink } from 'lucide-react';
 import Slider from 'react-slick';
 import { ProjectCard } from './ProjectCard';
+import { CardButtons } from './CardButtons';
 import { EditableContent } from './cms/EditableContent';
 import { EditableCollection } from './cms/EditableCollection';
 import { useCMS } from '../context/CMSContext';
@@ -267,6 +268,15 @@ const misc = [
 const toArray = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter(Boolean).map(String) : (typeof v === 'string' ? (v || '').split(',').map(s => s.trim()).filter(Boolean) : []);
 
+// Pick first non-empty string from values (handles undefined, null, empty string)
+const firstFilled = (...vals: (string | undefined | null)[]): string => {
+  const v = vals.find(x => x != null && String(x).trim() !== '');
+  return v != null ? String(v).trim() : '';
+};
+
+// Placeholder image for events without one
+const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080';
+
 // Custom Arrow Components
 const CustomArrow = ({ onClick, direction }: { onClick?: () => void; direction: 'prev' | 'next' }) => (
   direction === 'prev' ? null :
@@ -491,13 +501,21 @@ export const Events = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-24"
         >
-          <motion.h1 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-5xl md:text-7xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
+            role="heading"
+            aria-level={1}
           >
-            Events
-          </motion.h1>
+            <EditableContent
+              id="events-title"
+              defaultContent="Events"
+              enableProse={false}
+              multiline={false}
+              className="[&_p]:m-0"
+            />
+          </motion.div>
           <div className="text-lg md:text-xl text-neutral-500 font-serif italic max-w-2xl leading-relaxed">
             <EditableContent
               id="events-intro"
@@ -510,7 +528,15 @@ export const Events = () => {
 
         {/* SECTION 1: TALKS */}
         <div className="mb-32">
-           <h2 className="text-2xl md:text-4xl font-mono tracking-widest uppercase text-neutral-400 mb-8">01 / Instant Future Talks</h2>
+           <div className="text-2xl md:text-4xl font-mono tracking-widest uppercase text-neutral-400 mb-8" role="heading" aria-level={2}>
+             <EditableContent
+               id="events-section1-title"
+               defaultContent="01 / Instant Future Talks"
+               enableProse={false}
+               multiline={false}
+               className="[&_p]:m-0"
+             />
+           </div>
 
            {isEditing ? (
              <EditableCollection
@@ -528,12 +554,18 @@ export const Events = () => {
                  { key: 'image', label: 'Image', type: 'image' },
                  { key: 'description', label: 'Description', type: 'textarea' },
                  { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
+                 { key: 'button1_show', label: 'Afficher le 1er bouton', type: 'toggle' },
+                 { key: 'button1_label', label: 'Bouton 1 - Texte', type: 'text', showWhen: 'button1_show' },
+                 { key: 'button1_url', label: 'Bouton 1 - URL', type: 'text', showWhen: 'button1_show' },
+                 { key: 'button2_show', label: 'Afficher le 2e bouton', type: 'toggle' },
+                 { key: 'button2_label', label: 'Bouton 2 - Texte', type: 'text', showWhen: 'button2_show' },
+                 { key: 'button2_url', label: 'Bouton 2 - URL', type: 'text', showWhen: 'button2_show' },
                ]}
                renderItem={(talk: any, index: number) => (
                  <ProjectCard
-                   title={talk.title}
-                   subtitle={talk.date}
-                   image={talk.image}
+                   title={talk.title || 'Untitled'}
+                   subtitle={firstFilled(talk.date, talk.time, talk.location, talk.speaker)}
+                   image={talk.image || PLACEHOLDER_IMAGE}
                    aspectRatio="square"
                    variant="geometric"
                    index={index}
@@ -547,9 +579,9 @@ export const Events = () => {
                  {allTalks.map((talk, index) => (
                    <div key={talk.id} className="px-3">
                      <ProjectCard
-                       title={talk.title}
-                       subtitle={talk.date}
-                       image={talk.image}
+                       title={talk.title || 'Untitled'}
+                       subtitle={firstFilled(talk.date, talk.time, talk.location, talk.speaker)}
+                       image={talk.image || PLACEHOLDER_IMAGE}
                        aspectRatio="square"
                        variant="geometric"
                        index={index}
@@ -564,7 +596,15 @@ export const Events = () => {
 
         {/* SECTION 2: FESTIVALS */}
         <div className="mb-32">
-           <h2 className="text-2xl md:text-4xl font-mono tracking-widest uppercase text-neutral-400 mb-8">02 / Trailblazer Talks</h2>
+           <div className="text-2xl md:text-4xl font-mono tracking-widest uppercase text-neutral-400 mb-8" role="heading" aria-level={2}>
+             <EditableContent
+               id="events-section2-title"
+               defaultContent="02 / Trailblazer Talks"
+               enableProse={false}
+               multiline={false}
+               className="[&_p]:m-0"
+             />
+           </div>
 
            {isEditing ? (
              <EditableCollection
@@ -580,12 +620,18 @@ export const Events = () => {
                  { key: 'description', label: 'Description', type: 'textarea' },
                  { key: 'highlights', label: 'Highlights (comma separated)', type: 'text' },
                  { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
+                 { key: 'button1_show', label: 'Afficher le 1er bouton', type: 'toggle' },
+                 { key: 'button1_label', label: 'Bouton 1 - Texte', type: 'text', showWhen: 'button1_show' },
+                 { key: 'button1_url', label: 'Bouton 1 - URL', type: 'text', showWhen: 'button1_show' },
+                 { key: 'button2_show', label: 'Afficher le 2e bouton', type: 'toggle' },
+                 { key: 'button2_label', label: 'Bouton 2 - Texte', type: 'text', showWhen: 'button2_show' },
+                 { key: 'button2_url', label: 'Bouton 2 - URL', type: 'text', showWhen: 'button2_show' },
                ]}
                renderItem={(fest: any, index: number) => (
                  <ProjectCard
-                   title={fest.theme}
-                   subtitle={fest.year}
-                   image={fest.image}
+                   title={fest.theme || 'Untitled'}
+                   subtitle={firstFilled(fest.year, fest.date, fest.location)}
+                   image={fest.image || PLACEHOLDER_IMAGE}
                    aspectRatio="square"
                    variant="geometric"
                    index={index}
@@ -597,11 +643,11 @@ export const Events = () => {
              <div className="relative" onWheel={createTrackpadWheelHandler(festivalsSliderRef, festivalsLastWheelAtRef)}>
                <Slider ref={festivalsSliderRef} {...festivalsSettings}>
                  {allFestivals.map((fest, index) => (
-                   <div key={fest.year} className="px-3">
+                   <div key={fest.id ?? fest.year} className="px-3">
                      <ProjectCard
-                       title={fest.theme}
-                       subtitle={fest.year}
-                       image={fest.image}
+                       title={fest.theme || 'Untitled'}
+                       subtitle={firstFilled(fest.year, fest.date, fest.location)}
+                       image={fest.image || PLACEHOLDER_IMAGE}
                        aspectRatio="square"
                        variant="geometric"
                        index={index}
@@ -616,7 +662,15 @@ export const Events = () => {
 
         {/* SECTION 3: MISC */}
         <div className="mb-12">
-           <h2 className="text-2xl md:text-4xl font-mono tracking-widest uppercase text-neutral-400 mb-8">03 / De Vinci Festival</h2>
+           <div className="text-2xl md:text-4xl font-mono tracking-widest uppercase text-neutral-400 mb-8" role="heading" aria-level={2}>
+             <EditableContent
+               id="events-section3-title"
+               defaultContent="03 / De Vinci Festival"
+               enableProse={false}
+               multiline={false}
+               className="[&_p]:m-0"
+             />
+           </div>
 
            {isEditing ? (
              <EditableCollection
@@ -634,12 +688,18 @@ export const Events = () => {
                  { key: 'publication', label: 'Publication (if press)', type: 'text' },
                  { key: 'author', label: 'Author (if press)', type: 'text' },
                  { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
+                 { key: 'button1_show', label: 'Afficher le 1er bouton', type: 'toggle' },
+                 { key: 'button1_label', label: 'Bouton 1 - Texte', type: 'text', showWhen: 'button1_show' },
+                 { key: 'button1_url', label: 'Bouton 1 - URL', type: 'text', showWhen: 'button1_show' },
+                 { key: 'button2_show', label: 'Afficher le 2e bouton', type: 'toggle' },
+                 { key: 'button2_label', label: 'Bouton 2 - Texte', type: 'text', showWhen: 'button2_show' },
+                 { key: 'button2_url', label: 'Bouton 2 - URL', type: 'text', showWhen: 'button2_show' },
                ]}
                renderItem={(item: any, index: number) => (
                  <ProjectCard
-                   title={item.title}
-                   subtitle={item.category}
-                   image={item.image}
+                   title={item.title || 'Untitled'}
+                   subtitle={firstFilled(item.category, item.date)}
+                   image={item.image || PLACEHOLDER_IMAGE}
                    aspectRatio="square"
                    variant="geometric"
                    accentColor="text-white"
@@ -654,9 +714,9 @@ export const Events = () => {
                  {allMisc.map((item, index) => (
                    <div key={item.id} className="px-3">
                      <ProjectCard
-                       title={item.title}
-                       subtitle={item.category}
-                       image={item.image}
+                       title={item.title || 'Untitled'}
+                       subtitle={firstFilled(item.category, item.date)}
+                       image={item.image || PLACEHOLDER_IMAGE}
                        aspectRatio="square"
                        variant="geometric"
                        accentColor="text-white"
@@ -699,8 +759,8 @@ export const Events = () => {
               {/* Media Section - Left Side */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
                 <img 
-                  src={viewingTalk.image} 
-                  alt={viewingTalk.title} 
+                  src={viewingTalk.image || PLACEHOLDER_IMAGE} 
+                  alt={viewingTalk.title || 'Event'} 
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 text-xs font-mono uppercase tracking-wider border border-neutral-100">
@@ -711,58 +771,68 @@ export const Events = () => {
               {/* Content Section - Right Side */}
               <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
                 <div className="mb-6">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {toArray(viewingTalk.tags).map((tag: string) => (
-                      <span key={tag} className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                  {toArray(viewingTalk.tags).length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {toArray(viewingTalk.tags).map((tag: string) => (
+                        <span key={tag} className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   
                   <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 mb-4 leading-tight">
-                    {viewingTalk.title}
+                    {viewingTalk.title || 'Untitled'}
                   </h2>
                   
-                  <div className="flex flex-col gap-2 mb-8 border-l-2 border-teal-500 pl-4 py-1">
-                    <div className="flex items-center gap-2 text-sm text-neutral-600">
-                      <Users className="w-4 h-4 text-teal-600" />
-                      <span className="font-bold text-neutral-900">{viewingTalk.speaker}</span>
-                      <span className="text-neutral-400">•</span>
-                      <span>{viewingTalk.role}</span>
+                  {(viewingTalk.speaker || viewingTalk.role || viewingTalk.organization || viewingTalk.date || viewingTalk.time || viewingTalk.location) && (
+                    <div className="flex flex-col gap-2 mb-8 border-l-2 border-teal-500 pl-4 py-1">
+                      {(viewingTalk.speaker || viewingTalk.role || viewingTalk.organization) && (
+                        <div className="flex items-center gap-2 text-sm text-neutral-600">
+                          <Users className="w-4 h-4 text-teal-600" />
+                          {viewingTalk.speaker && <span className="font-bold text-neutral-900">{viewingTalk.speaker}</span>}
+                          {viewingTalk.speaker && (viewingTalk.role || viewingTalk.organization) && <span className="text-neutral-400">•</span>}
+                          {(viewingTalk.role || viewingTalk.organization) && <span>{[viewingTalk.role, viewingTalk.organization].filter(Boolean).join(', ')}</span>}
+                        </div>
+                      )}
+                      {(viewingTalk.date || viewingTalk.time) && (
+                        <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
+                          <Calendar className="w-4 h-4 text-teal-600" />
+                          <span>{[viewingTalk.date, viewingTalk.time].filter(Boolean).join(' • ')}</span>
+                        </div>
+                      )}
+                      {viewingTalk.location && (
+                        <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
+                          <MapPin className="w-4 h-4 text-teal-600" />
+                          <span>{viewingTalk.location}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
-                      <Calendar className="w-4 h-4 text-teal-600" />
-                      <span>{viewingTalk.date} • {viewingTalk.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
-                      <MapPin className="w-4 h-4 text-teal-600" />
-                      <span>{viewingTalk.location}</span>
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="prose prose-neutral prose-sm max-w-none mb-8">
-                    <p className="text-neutral-600 leading-relaxed text-base">
-                      {viewingTalk.description}
-                    </p>
-                    <p className="text-neutral-600 leading-relaxed text-base mt-4">
-                      Join us for an engaging discussion with {viewingTalk.speaker} from {viewingTalk.organization}. 
-                      This talk is part of our Discovery Talks series, bringing together leading researchers and practitioners 
-                      to share cutting-edge insights and foster meaningful dialogue.
-                    </p>
-                  </div>
+                  {viewingTalk.description && (
+                    <div className="prose prose-neutral prose-sm max-w-none mb-8">
+                      <p className="text-neutral-600 leading-relaxed text-base">
+                        {viewingTalk.description}
+                      </p>
+                      {(viewingTalk.speaker || viewingTalk.organization) && (
+                        <p className="text-neutral-600 leading-relaxed text-base mt-4">
+                          Join us for an engaging discussion{viewingTalk.speaker ? ` with ${viewingTalk.speaker}` : ''}{viewingTalk.organization ? ` from ${viewingTalk.organization}` : ''}. 
+                          This talk is part of our Discovery Talks series, bringing together leading researchers and practitioners 
+                          to share cutting-edge insights and foster meaningful dialogue.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <div className="mt-auto pt-8 border-t border-neutral-100 flex gap-4">
-                  <button className="flex items-center gap-2 bg-neutral-900 text-white px-6 py-3 hover:bg-teal-600 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center relative overflow-hidden group shadow-lg hover:shadow-2xl hover:shadow-teal-500/20">
-                    <span className="absolute inset-0 w-0 bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:w-full transition-all duration-700 ease-out"></span>
-                    <Ticket className="w-4 h-4 relative z-10" />
-                    <span className="relative z-10">Register</span>
-                  </button>
-                  <button className="flex items-center gap-2 border border-neutral-200 text-neutral-900 px-6 py-3 hover:bg-neutral-50 hover:border-teal-400 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center hover:shadow-md">
-                     <Calendar className="w-4 h-4" />
-                     Add to Calendar
-                  </button>
-                </div>
+                <CardButtons
+                  item={viewingTalk}
+                  defaultButtons={[
+                    { label: 'Register', primary: true },
+                    { label: 'Add to Calendar', primary: false },
+                  ]}
+                />
               </div>
             </motion.div>
           </div>
@@ -797,66 +867,78 @@ export const Events = () => {
               {/* Media Section - Left Side */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
                 <img 
-                  src={viewingFestival.image} 
-                  alt={viewingFestival.theme} 
+                  src={viewingFestival.image || PLACEHOLDER_IMAGE} 
+                  alt={viewingFestival.theme || 'Festival'} 
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 text-xs font-mono uppercase tracking-wider border border-neutral-100">
-                  IFT Festival {viewingFestival.year}
-                </div>
+                {(viewingFestival.year || viewingFestival.theme) && (
+                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 text-xs font-mono uppercase tracking-wider border border-neutral-100">
+                    {viewingFestival.year ? `IFT Festival ${viewingFestival.year}` : (viewingFestival.theme || 'Festival')}
+                  </div>
+                )}
               </div>
 
               {/* Content Section - Right Side */}
               <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
                 <div className="mb-6">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {toArray(viewingFestival.tags).map((tag: string) => (
-                      <span key={tag} className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                  {toArray(viewingFestival.tags).length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {toArray(viewingFestival.tags).map((tag: string) => (
+                        <span key={tag} className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   
                   <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 mb-4 leading-tight">
-                    {viewingFestival.theme}
+                    {viewingFestival.theme || 'Untitled'}
                   </h2>
                   
-                  <div className="flex flex-col gap-2 mb-8 border-l-2 border-teal-500 pl-4 py-1">
-                    <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
-                      <Calendar className="w-4 h-4 text-teal-600" />
-                      <span>{viewingFestival.date}</span>
+                  {(viewingFestival.date || viewingFestival.location) && (
+                    <div className="flex flex-col gap-2 mb-8 border-l-2 border-teal-500 pl-4 py-1">
+                      {viewingFestival.date && (
+                        <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
+                          <Calendar className="w-4 h-4 text-teal-600" />
+                          <span>{viewingFestival.date}</span>
+                        </div>
+                      )}
+                      {viewingFestival.location && (
+                        <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
+                          <MapPin className="w-4 h-4 text-teal-600" />
+                          <span>{viewingFestival.location}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
-                      <MapPin className="w-4 h-4 text-teal-600" />
-                      <span>{viewingFestival.location}</span>
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="prose prose-neutral prose-sm max-w-none mb-8">
-                    <p className="text-neutral-600 leading-relaxed text-base">
-                      {viewingFestival.description}
-                    </p>
-                    
-                    <h3 className="text-lg font-bold text-neutral-900 mt-6 mb-3">Festival Highlights</h3>
-                    <ul className="space-y-2">
-                      {toArray(viewingFestival.highlights).map((highlight: string, i: number) => (
-                        <li key={i} className="text-neutral-600 text-base">{highlight}</li>
-                      ))}
-                    </ul>
-                  </div>
+                  {viewingFestival.description && (
+                    <div className="prose prose-neutral prose-sm max-w-none mb-8">
+                      <p className="text-neutral-600 leading-relaxed text-base">
+                        {viewingFestival.description}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {toArray(viewingFestival.highlights).length > 0 && (
+                    <>
+                      <h3 className="text-lg font-bold text-neutral-900 mt-6 mb-3">Festival Highlights</h3>
+                      <ul className="space-y-2">
+                        {toArray(viewingFestival.highlights).map((highlight: string, i: number) => (
+                          <li key={i} className="text-neutral-600 text-base">{highlight}</li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
                 </div>
 
-                <div className="mt-auto pt-8 border-t border-neutral-100 flex gap-4">
-                  <button className="flex items-center gap-2 bg-neutral-900 text-white px-6 py-3 hover:bg-teal-600 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center relative overflow-hidden group shadow-lg hover:shadow-2xl hover:shadow-teal-500/20">
-                    <span className="absolute inset-0 w-0 bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:w-full transition-all duration-700 ease-out"></span>
-                    <ExternalLink className="w-4 h-4 relative z-10" />
-                    <span className="relative z-10">Learn More</span>
-                  </button>
-                  <button className="flex items-center gap-2 border border-neutral-200 text-neutral-900 px-6 py-3 hover:bg-neutral-50 hover:border-teal-400 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center hover:shadow-md">
-                     <Calendar className="w-4 h-4" />
-                     Save the Date
-                  </button>
-                </div>
+                <CardButtons
+                  item={viewingFestival}
+                  defaultButtons={[
+                    { label: 'Learn More', primary: true },
+                    { label: 'Save the Date', primary: false },
+                  ]}
+                />
               </div>
             </motion.div>
           </div>
@@ -891,84 +973,90 @@ export const Events = () => {
               {/* Media Section - Left Side */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
                 <img 
-                  src={viewingMisc.image} 
-                  alt={viewingMisc.title} 
+                  src={viewingMisc.image || PLACEHOLDER_IMAGE} 
+                  alt={viewingMisc.title || 'Event'} 
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 text-xs font-mono uppercase tracking-wider border border-neutral-100">
-                  {viewingMisc.category}
-                </div>
+                {viewingMisc.category && (
+                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 text-xs font-mono uppercase tracking-wider border border-neutral-100">
+                    {viewingMisc.category}
+                  </div>
+                )}
               </div>
 
               {/* Content Section - Right Side */}
               <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
                 <div className="mb-6">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {toArray(viewingMisc.tags).map((tag: string) => (
-                      <span key={tag} className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                  {toArray(viewingMisc.tags).length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {toArray(viewingMisc.tags).map((tag: string) => (
+                        <span key={tag} className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   
                   <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 mb-4 leading-tight">
-                    {viewingMisc.title}
+                    {viewingMisc.title || 'Untitled'}
                   </h2>
                   
-                  <div className="flex flex-col gap-2 mb-8 border-l-2 border-teal-500 pl-4 py-1">
-                    <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
-                      <Calendar className="w-4 h-4 text-teal-600" />
-                      <span>{viewingMisc.date}</span>
-                    </div>
-                    {viewingMisc.award && (
-                      <div className="text-sm font-bold text-teal-600">
-                        {viewingMisc.award}
-                      </div>
-                    )}
-                    {viewingMisc.publication && (
-                      <div className="text-sm text-neutral-600">
-                        {viewingMisc.publication}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="prose prose-neutral prose-sm max-w-none mb-8">
-                    <p className="text-neutral-600 leading-relaxed text-base">
-                      {viewingMisc.description}
-                    </p>
-                    
-                    {viewingMisc.team && (
-                      <>
-                        <h3 className="text-lg font-bold text-neutral-900 mt-6 mb-3">Team Members</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {toArray(viewingMisc.team).map((member: string, i: number) => (
-                            <span key={i} className="px-3 py-1 bg-neutral-100 text-neutral-700 text-sm rounded-full">
-                              {member}
-                            </span>
-                          ))}
+                  {(viewingMisc.date || viewingMisc.award || viewingMisc.publication) && (
+                    <div className="flex flex-col gap-2 mb-8 border-l-2 border-teal-500 pl-4 py-1">
+                      {viewingMisc.date && (
+                        <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
+                          <Calendar className="w-4 h-4 text-teal-600" />
+                          <span>{viewingMisc.date}</span>
                         </div>
-                      </>
-                    )}
-                    
-                    {viewingMisc.author && (
-                      <div className="mt-4 text-sm text-neutral-500">
-                        Written by {viewingMisc.author}
+                      )}
+                      {viewingMisc.award && (
+                        <div className="text-sm font-bold text-teal-600">
+                          {viewingMisc.award}
+                        </div>
+                      )}
+                      {viewingMisc.publication && (
+                        <div className="text-sm text-neutral-600">
+                          {viewingMisc.publication}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {viewingMisc.description && (
+                    <div className="prose prose-neutral prose-sm max-w-none mb-8">
+                      <p className="text-neutral-600 leading-relaxed text-base">
+                        {viewingMisc.description}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {toArray(viewingMisc.team).length > 0 && (
+                    <>
+                      <h3 className="text-lg font-bold text-neutral-900 mt-6 mb-3">Team Members</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {toArray(viewingMisc.team).map((member: string, i: number) => (
+                          <span key={i} className="px-3 py-1 bg-neutral-100 text-neutral-700 text-sm rounded-full">
+                            {member}
+                          </span>
+                        ))}
                       </div>
-                    )}
-                  </div>
+                    </>
+                  )}
+                  
+                  {viewingMisc.author && (
+                    <div className="mt-4 text-sm text-neutral-500">
+                      Written by {viewingMisc.author}
+                    </div>
+                  )}
                 </div>
 
-                <div className="mt-auto pt-8 border-t border-neutral-100 flex gap-4">
-                  <button className="flex items-center gap-2 bg-neutral-900 text-white px-6 py-3 hover:bg-teal-600 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center relative overflow-hidden group shadow-lg hover:shadow-2xl hover:shadow-teal-500/20">
-                    <span className="absolute inset-0 w-0 bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:w-full transition-all duration-700 ease-out"></span>
-                    <ExternalLink className="w-4 h-4 relative z-10" />
-                    <span className="relative z-10">{viewingMisc.category === 'Press' ? 'Read Article' : 'View Details'}</span>
-                  </button>
-                  <button className="flex items-center gap-2 border border-neutral-200 text-neutral-900 px-6 py-3 hover:bg-neutral-50 hover:border-teal-400 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center hover:shadow-md">
-                     <ExternalLink className="w-4 h-4" />
-                     Share
-                  </button>
-                </div>
+                <CardButtons
+                  item={viewingMisc}
+                  defaultButtons={[
+                    { label: viewingMisc.category === 'Press' ? 'Read Article' : 'View Details', primary: true },
+                    { label: 'Share', primary: false },
+                  ]}
+                />
               </div>
             </motion.div>
           </div>

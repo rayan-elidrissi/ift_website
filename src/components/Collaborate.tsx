@@ -113,10 +113,12 @@ export const Collaborate = () => {
         {/* LEFT COLUMN: List */}
         <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-32 lg:pt-32 flex flex-col justify-center bg-white/95 backdrop-blur-sm border-r border-neutral-200">
           <div className="mb-6">
-            <motion.h1
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-5xl md:text-7xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
+              role="heading"
+              aria-level={1}
             >
               <EditableContent
                 id="collaborate-title"
@@ -124,9 +126,9 @@ export const Collaborate = () => {
                 enableProse={false}
                 className="[&_p]:m-0"
               />
-            </motion.h1>
+            </motion.div>
 
-            <motion.p
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -138,9 +140,9 @@ export const Collaborate = () => {
                 enableProse={false}
                 className="[&_p]:m-0"
               />
-            </motion.p>
+            </motion.div>
 
-            <h2 className="font-mono text-sm uppercase tracking-widest text-neutral-500 mb-2 flex items-center gap-2">
+            <div className="font-mono text-sm uppercase tracking-widest text-neutral-500 mb-2 flex items-center gap-2">
               <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
               <EditableContent
                 id="collaborate-pathways-label"
@@ -148,7 +150,7 @@ export const Collaborate = () => {
                 enableProse={false}
                 className="[&_p]:inline [&_p]:m-0"
               />
-            </h2>
+            </div>
           </div>
 
           <div

@@ -71,6 +71,8 @@ export const EditableContent = ({
   };
 
   const markdownClass = enableProse ? "prose prose-neutral max-w-none" : "w-full h-full [&>p]:m-0";
+  /** When enableProse is false, render p as span to avoid invalid nesting (p inside p/div inside p) */
+  const markdownComponents = enableProse ? undefined : { p: ({ children }: { children?: React.ReactNode }) => <span className="block">{children}</span> };
 
   if (editable) {
     return (
@@ -81,7 +83,7 @@ export const EditableContent = ({
             className={`cursor-pointer outline-2 outline-dashed outline-teal-500/50 hover:bg-teal-50/50 p-1 rounded transition-all ${className}`}
           >
             <div className={markdownClass}>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {content}
               </ReactMarkdown>
             </div>
@@ -161,7 +163,7 @@ export const EditableContent = ({
   return (
     <div className={className}>
       <div className={markdownClass}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
           {content}
         </ReactMarkdown>
       </div>

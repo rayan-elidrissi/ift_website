@@ -18,12 +18,16 @@ export const CMS_KEY_TO_SLUG: Record<string, string> = {
   'featured-projects-button': 'page-home',
   'featured-projects-button-url': 'page-home',
   'featured-project-ids': 'page-home',
-  'research-projects': 'page-home',
   'latest-events-label': 'page-home',
   'latest-events-title': 'page-home',
   'latest-events-button': 'page-home',
   'latest-events-button-url': 'page-home',
   'latest-events': 'page-home',
+  'coming-soon-label': 'page-home',
+  'coming-soon-title': 'page-home',
+  'coming-soon-button': 'page-home',
+  'coming-soon-button-url': 'page-home',
+  'coming-soon-items': 'page-home',
 
   // About page
   'about-title': 'page-about',
@@ -79,7 +83,11 @@ export const CMS_KEY_TO_SLUG: Record<string, string> = {
   'arts-full-archive-title': 'page-arts',
 
   // Events page
+  'events-title': 'page-events',
   'events-intro': 'page-events',
+  'events-section1-title': 'page-events',
+  'events-section2-title': 'page-events',
+  'events-section3-title': 'page-events',
   'events-talks': 'page-events',
   'events-festivals': 'page-events',
   'events-misc': 'page-events',

@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { FeaturedProjects } from './components/FeaturedProjects';
-import { LatestEvents } from './components/LatestEvents';
+import { ComingSoon } from './components/ComingSoon';
 import { About } from './components/About';
 import { Research } from './components/Research';
 import { Education } from './components/Education';
@@ -56,7 +56,7 @@ const AppContent = () => {
                 <>
                   <Hero />
                   <FeaturedProjects />
-                  <LatestEvents />
+                  <ComingSoon />
                 </>
               } />
               <Route path="/about" element={<About />} />

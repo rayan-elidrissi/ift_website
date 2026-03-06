@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import { FileText, Share2, Filter, ArrowUpRight, Download, Calendar, X } from 'lucide-react';
 import { EditableCollection } from './cms/EditableCollection';
 import { EditableContent } from './cms/EditableContent';
+import { CardButtons } from './CardButtons';
 import { useCMS } from '../context/CMSContext';
 
 const researchThemes = [
@@ -31,7 +32,7 @@ const researchThemes = [
   }
 ];
 
-const defaultPublications = [
+export const defaultPublications = [
   {
     id: "01",
     title: "ReTouche: Embodied Representations for Self-Directed Piano Learning",
@@ -123,9 +124,10 @@ const defaultPublications = [
 ];
 
 // Helper to map tags to main categories
-const matchesCategory = (tags: string[], category: string) => {
+const matchesCategory = (tags: string[] | string | undefined, category: string) => {
   if (category === 'All') return true;
-  const lowerTags = tags.map(t => t.toLowerCase());
+  const arr = Array.isArray(tags) ? tags : (tags || '').split(',').map(t => t.trim()).filter(Boolean);
+  const lowerTags = arr.map(t => t.toLowerCase());
   
   if (category === 'HCI') {
     return lowerTags.some(t => ['hci', 'vr', 'ar', 'haptics', 'ux', 'interfaces', 'web'].some(k => t.includes(k)));
@@ -232,10 +234,12 @@ export const Research = () => {
         <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-32 lg:pt-32 flex flex-col justify-center bg-white/95 backdrop-blur-sm border-r border-neutral-200">
           
           <div className="mb-6">
-            <motion.h1 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-5xl md:text-7xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
+              role="heading"
+              aria-level={1}
             >
               <EditableContent
                 id="research-title"
@@ -243,9 +247,9 @@ export const Research = () => {
                 enableProse={false}
                 className="[&_p]:m-0"
               />
-            </motion.h1>
-            
-            <motion.p 
+            </motion.div>
+
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -257,9 +261,9 @@ export const Research = () => {
                 enableProse={false}
                 className="[&_p]:m-0"
               />
-            </motion.p>
-            
-            <h2 className="font-mono text-sm uppercase tracking-widest text-neutral-500 mb-2 flex items-center gap-2">
+            </motion.div>
+
+            <div className="font-mono text-sm uppercase tracking-widest text-neutral-500 mb-2 flex items-center gap-2">
               <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
               <EditableContent
                 id="research-core-themes-label"
@@ -267,7 +271,7 @@ export const Research = () => {
                 enableProse={false}
                 className="[&_p]:inline [&_p]:m-0"
               />
-            </h2>
+            </div>
           </div>
 
           <div
@@ -351,7 +355,7 @@ export const Research = () => {
                    className="bg-white/90 backdrop-blur-md p-8 md:p-12 border border-white/50 shadow-2xl"
                 >
                   <div className="flex flex-wrap gap-2 mb-6">
-                    {activeTheme.tags.map((tag, i) => (
+                    {(Array.isArray(activeTheme.tags) ? activeTheme.tags : (activeTheme.tags || '').split(',')).map((tag: string, i: number) => (
                       <span key={i} className="px-3 py-1 border border-teal-200 bg-teal-50 rounded-full text-[10px] uppercase tracking-wider text-teal-800">
                         {tag}
                       </span>
@@ -463,7 +467,13 @@ export const Research = () => {
                         { key: 'image', label: 'Image', type: 'image' },
                         { key: 'video', label: 'Video (Optional)', type: 'video' },
                         { key: 'tags', label: 'Tags (comma separated array)', type: 'text' },
-                        { key: 'featured', label: 'Featured? (true/false)', type: 'text' }
+                        { key: 'featured', label: 'Featured? (true/false)', type: 'text' },
+                        { key: 'button1_show', label: 'Afficher le 1er bouton', type: 'toggle' },
+                        { key: 'button1_label', label: 'Bouton 1 - Texte', type: 'text', showWhen: 'button1_show' },
+                        { key: 'button1_url', label: 'Bouton 1 - URL', type: 'text', showWhen: 'button1_show' },
+                        { key: 'button2_show', label: 'Afficher le 2e bouton', type: 'toggle' },
+                        { key: 'button2_label', label: 'Bouton 2 - Texte', type: 'text', showWhen: 'button2_show' },
+                        { key: 'button2_url', label: 'Bouton 2 - URL', type: 'text', showWhen: 'button2_show' },
                       ]}
                       containerClassName="contents"
                       renderItem={(pub: any, index: number) => (
@@ -665,17 +675,13 @@ export const Research = () => {
                   </div>
                 </div>
 
-                <div className="shrink-0 pt-6 border-t border-neutral-100 flex gap-4 bg-white">
-                  <button className="flex items-center gap-2 bg-neutral-900 text-white px-6 py-3 hover:bg-teal-600 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center relative overflow-hidden group shadow-lg hover:shadow-2xl hover:shadow-teal-500/20">
-                    <span className="absolute inset-0 w-0 bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:w-full transition-all duration-700 ease-out"></span>
-                    <FileText className="w-4 h-4 relative z-10" />
-                    <span className="relative z-10">Read PDF</span>
-                  </button>
-                  <button className="flex items-center gap-2 border border-neutral-200 text-neutral-900 px-6 py-3 hover:bg-neutral-50 hover:border-teal-400 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center hover:shadow-md">
-                     <Share2 className="w-4 h-4" />
-                     Cite
-                  </button>
-                </div>
+                <CardButtons
+                  item={viewingPaper}
+                  defaultButtons={[
+                    { label: 'Read PDF', primary: true },
+                    { label: 'Cite', primary: false },
+                  ]}
+                />
               </div>
             </motion.div>
           </div>

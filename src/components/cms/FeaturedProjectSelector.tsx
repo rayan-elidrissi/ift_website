@@ -17,18 +17,21 @@ interface Project {
 interface FeaturedProjectSelectorProps {
   allProjects: Project[];
   contentId: string;
+  /** Default IDs when none saved (e.g. one from each source: pub, student, art) */
+  defaultSelectedIds?: string[];
 }
 
 export const FeaturedProjectSelector: React.FC<FeaturedProjectSelectorProps> = ({ 
   allProjects, 
-  contentId 
+  contentId,
+  defaultSelectedIds 
 }) => {
   const { getContent, updateContent, isEditing, canEditKey } = useCMS();
   const editable = isEditing && canEditKey(contentId);
   const [isOpen, setIsOpen] = useState(false);
   
-  // Get currently selected project IDs from CMS
-  const selectedIds = getContent(contentId, allProjects.slice(0, 3).map(p => p.id)) as string[];
+  const fallbackIds = defaultSelectedIds ?? allProjects.slice(0, 3).map(p => p.id);
+  const selectedIds = getContent(contentId, fallbackIds) as string[];
   const [tempSelectedIds, setTempSelectedIds] = useState<string[]>(selectedIds);
 
   const handleToggleProject = (projectId: string) => {
@@ -78,7 +81,7 @@ export const FeaturedProjectSelector: React.FC<FeaturedProjectSelectorProps> = (
       >
         <div className="p-6 bg-neutral-50">
           <p className="text-sm text-neutral-600 mb-6">
-            Select which projects should appear in the Featured Projects section on the homepage.
+            Select which projects should appear in the Featured Projects section. Projects are sourced from Research publications, Student projects (Education), and Art exhibitions.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2">
@@ -118,7 +121,7 @@ export const FeaturedProjectSelector: React.FC<FeaturedProjectSelectorProps> = (
                   <div className="p-4 bg-white min-h-[120px]">
                     <div className="flex items-center justify-between mb-2 gap-2">
                       <span className="text-xs font-mono text-teal-600 uppercase flex-shrink-0">
-                        {project.tags[0]}
+                        {project.sourceType === 'publication' ? 'Research' : project.sourceType === 'student' ? 'Student' : project.sourceType === 'art' ? 'Art' : (project.id?.startsWith('pub-') ? 'Research' : project.id?.startsWith('stu-') ? 'Student' : 'Art')}
                       </span>
                       <span className="text-xs font-mono text-neutral-400 flex-shrink-0">
                         {project.year}

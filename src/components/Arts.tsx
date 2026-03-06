@@ -15,9 +15,10 @@ import Masonry, {
 } from "react-responsive-masonry";
 import { EditableContent } from './cms/EditableContent';
 import { EditableCollection } from './cms/EditableCollection';
+import { CardButtons } from './CardButtons';
 import { useCMS } from '../context/CMSContext';
 
-const exhibitions = [
+export const defaultExhibitions = [
   {
     id: 1,
     title: "Neural Landscapes",
@@ -106,12 +107,12 @@ const exhibitions = [
 
 export const Arts = () => {
   const { getContent, isEditing } = useCMS();
-  const allExhibitions = getContent('arts-exhibitions', exhibitions) as typeof exhibitions;
+  const allExhibitions = getContent('arts-exhibitions', defaultExhibitions) as typeof defaultExhibitions;
 
   const [selectedWork, setSelectedWork] = useState<
-    (typeof exhibitions)[0] | null
+    (typeof defaultExhibitions)[0] | null
   >(null);
-  const [activeHighlight, setActiveHighlight] = useState(exhibitions[0]);
+  const [activeHighlight, setActiveHighlight] = useState(defaultExhibitions[0]);
   const [isHoveringList, setIsHoveringList] = useState(false);
 
   const featuredWorks = allExhibitions.slice(0, 3);
@@ -133,10 +134,12 @@ export const Arts = () => {
         <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-32 lg:pt-32 flex flex-col justify-center bg-white/95 backdrop-blur-sm border-r border-neutral-200">
           
           <div className="mb-6">
-            <motion.h1 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-5xl md:text-7xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
+              role="heading"
+              aria-level={1}
             >
               <EditableContent
                 id="arts-title"
@@ -144,9 +147,9 @@ export const Arts = () => {
                 enableProse={false}
                 className="[&_p]:m-0"
               />
-            </motion.h1>
-            
-            <motion.div 
+            </motion.div>
+
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -160,7 +163,7 @@ export const Arts = () => {
               />
             </motion.div>
             
-            <h2 className="font-mono text-sm uppercase tracking-widest text-neutral-500 mb-2 flex items-center gap-2">
+            <div className="font-mono text-sm uppercase tracking-widest text-neutral-500 mb-2 flex items-center gap-2" role="heading" aria-level={2}>
               <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
               <EditableContent
                 id="arts-featured-exhibitions-label"
@@ -168,7 +171,7 @@ export const Arts = () => {
                 enableProse={false}
                 className="[&_p]:inline [&_p]:m-0"
               />
-            </h2>
+            </div>
           </div>
 
           <div 
@@ -177,7 +180,7 @@ export const Arts = () => {
           >
             <EditableCollection
               id="arts-exhibitions"
-              defaultData={exhibitions}
+              defaultData={defaultExhibitions}
               displayItems={featuredWorks}
               containerClassName="space-y-0 min-h-[300px]"
               schema={[
@@ -189,6 +192,12 @@ export const Arts = () => {
                 { key: 'description', label: 'Description', type: 'textarea' },
                 { key: 'materials', label: 'Materials / Technologies', type: 'text' },
                 { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
+                { key: 'button1_show', label: 'Afficher le 1er bouton', type: 'toggle' },
+                { key: 'button1_label', label: 'Bouton 1 - Texte', type: 'text', showWhen: 'button1_show' },
+                { key: 'button1_url', label: 'Bouton 1 - URL', type: 'text', showWhen: 'button1_show' },
+                { key: 'button2_show', label: 'Afficher le 2e bouton', type: 'toggle' },
+                { key: 'button2_label', label: 'Bouton 2 - Texte', type: 'text', showWhen: 'button2_show' },
+                { key: 'button2_url', label: 'Bouton 2 - URL', type: 'text', showWhen: 'button2_show' },
               ]}
               renderItem={(work, _index, _isEditing) => (
                 <AnimatePresence mode="popLayout">
@@ -265,7 +274,7 @@ export const Arts = () => {
                    className="bg-white/90 backdrop-blur-md p-8 md:p-12 border border-white/50 shadow-2xl"
                 >
                   <div className="flex flex-wrap gap-2 mb-6">
-                    {activeHighlight.tags?.map((tag, i) => (
+                    {(Array.isArray(activeHighlight.tags) ? activeHighlight.tags : (activeHighlight.tags || '').split(',')).map((tag: string, i: number) => (
                       <span key={i} className="px-3 py-1 border border-teal-200 bg-teal-50 rounded-full text-[10px] uppercase tracking-wider text-teal-800">
                         {tag}
                       </span>
@@ -305,19 +314,19 @@ export const Arts = () => {
 
       {/* ALL WORKS GRID */}
       <div className="max-w-[1920px] mx-auto px-6 md:px-12 xl:px-20 relative z-10 py-24 border-t border-neutral-200">
-        <h2 className="text-4xl md:text-5xl font-serif text-neutral-900 mb-16 text-center">
+        <div className="text-4xl md:text-5xl font-serif text-neutral-900 mb-16 text-center" role="heading" aria-level={2}>
           <EditableContent
             id="arts-full-archive-title"
             defaultContent="Full Archive"
             enableProse={false}
             className="[&_p]:m-0"
           />
-        </h2>
+        </div>
 
         {isEditing ? (
           <EditableCollection
             id="arts-exhibitions"
-            defaultData={exhibitions}
+            defaultData={defaultExhibitions}
             containerClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12"
             schema={[
               { key: 'title', label: 'Title', type: 'text' },
@@ -438,7 +447,7 @@ export const Arts = () => {
               <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
                 <div className="mb-6">
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {selectedWork.tags.map((tag: any, i: number) => (
+                    {(Array.isArray(selectedWork.tags) ? selectedWork.tags : (selectedWork.tags || '').split(',')).map((tag: any, i: number) => (
                       <span key={i} className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm">
                         {tag}
                       </span>
@@ -470,17 +479,13 @@ export const Arts = () => {
                   </div>
                 </div>
 
-                <div className="mt-auto pt-8 border-t border-neutral-100 flex gap-4">
-                  <button className="flex items-center gap-2 bg-neutral-900 text-white px-6 py-3 hover:bg-teal-600 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center relative overflow-hidden group shadow-lg hover:shadow-2xl hover:shadow-teal-500/20">
-                    <span className="absolute inset-0 w-0 bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:w-full transition-all duration-700 ease-out"></span>
-                    <FileText className="w-4 h-4 relative z-10" />
-                    <span className="relative z-10">View Portfolio</span>
-                  </button>
-                  <button className="flex items-center gap-2 border border-neutral-200 text-neutral-900 px-6 py-3 hover:bg-neutral-50 hover:border-teal-400 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center hover:shadow-md">
-                     <Share2 className="w-4 h-4" />
-                     Share
-                  </button>
-                </div>
+                <CardButtons
+                  item={selectedWork}
+                  defaultButtons={[
+                    { label: 'View Portfolio', primary: true },
+                    { label: 'Share', primary: false },
+                  ]}
+                />
               </div>
             </motion.div>
           </div>

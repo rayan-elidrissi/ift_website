@@ -6,6 +6,7 @@
 export type CMSSection =
   | 'hero'
   | 'featured'
+  | 'coming_soon'
   | 'latest_events'
   | 'about'
   | 'research'
@@ -21,7 +22,7 @@ export type CMSRole = 'admin' | 'staff' | 'students';
 const SECTION_BY_KEY_PREFIX: Array<{ prefix: string; section: CMSSection }> = [
   { prefix: 'hero-', section: 'hero' },
   { prefix: 'featured-', section: 'featured' },
-  { prefix: 'research-projects', section: 'featured' },
+  { prefix: 'coming-soon', section: 'coming_soon' },
   { prefix: 'latest-events', section: 'latest_events' },
   { prefix: 'about-', section: 'about' },
   { prefix: 'team-', section: 'about' },
@@ -45,6 +46,7 @@ const ROLE_SECTIONS: Record<CMSRole, CMSSection[]> = {
   admin: [
     'hero',
     'featured',
+    'coming_soon',
     'latest_events',
     'about',
     'research',

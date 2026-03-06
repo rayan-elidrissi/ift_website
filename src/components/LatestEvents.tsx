@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calendar, MapPin, ArrowRight, Mic, Code, Zap, X, Ticket } from 'lucide-react';
+import { Calendar, ArrowRight, X } from 'lucide-react';
 import { EditableCollection } from './cms/EditableCollection';
 import { EditableContent } from './cms/EditableContent';
+import { CardButtons } from './CardButtons';
 import { EditableLink } from './cms/EditableLink';
-import { useCMS } from '../context/CMSContext';
 
 type EventItem = {
   id: string;
@@ -56,35 +56,30 @@ const events: EventItem[] = [
 ];
 
 export const LatestEvents = () => {
-  const { isEditing } = useCMS();
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
-  const getFlexGrow = (index: number) => {
-    if (hoveredIndex === null) return index === 0 ? 2 : 1;
-    return hoveredIndex === index ? 2.4 : 0.9;
-  };
 
   return (
-    <section className="bg-neutral-50 py-24 px-6 md:px-12">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-16">
-          <EditableContent 
-            id="latest-events-label"
-            defaultContent="Agenda"
-            enableProse={false}
-            className="text-teal-600 text-xs font-mono tracking-widest uppercase mb-2 block [&_p]:m-0"
-          />
-          <EditableContent 
-            id="latest-events-title"
-            defaultContent="Latest Events"
-            enableProse={false}
-            className="text-4xl md:text-6xl font-serif text-neutral-900 tracking-tight [&_p]:m-0"
-          />
+    <section className="bg-neutral-50 py-12 px-6 md:px-12">
+      <div className="max-w-5xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
+          <div>
+            <EditableContent 
+              id="latest-events-label"
+              defaultContent="Agenda"
+              enableProse={false}
+              className="text-teal-600 text-[10px] font-mono tracking-widest uppercase mb-0.5 block [&_p]:m-0"
+            />
+            <EditableContent 
+              id="latest-events-title"
+              defaultContent="Latest Events"
+              enableProse={false}
+              className="text-2xl md:text-3xl font-serif text-neutral-900 tracking-tight [&_p]:m-0"
+            />
+          </div>
           <EditableLink
             id="latest-events-button-url"
             defaultHref="/events"
-            className="group inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-neutral-900 hover:text-teal-600 transition-colors mt-6"
+            className="group inline-flex items-center gap-1.5 text-xs font-medium text-neutral-600 hover:text-teal-600 transition-colors"
           >
             <EditableContent 
               id="latest-events-button"
@@ -97,7 +92,7 @@ export const LatestEvents = () => {
               secondaryPlaceholder="/events or https://..."
               className="[&_p]:m-0"
             />
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </EditableLink>
         </div>
 
@@ -105,14 +100,7 @@ export const LatestEvents = () => {
           id="latest-events"
           defaultData={events}
           maxItems={4}
-          containerClassName="flex flex-col lg:flex-row gap-4 h-auto lg:h-[580px]"
-          itemClassName="min-w-0 min-h-0"
-          getItemStyle={(_, index) => ({
-            flexGrow: getFlexGrow(index),
-            flexShrink: 1,
-            flexBasis: 0,
-            transition: 'flex-grow 0.55s cubic-bezier(0.4, 0, 0.2, 1)',
-          })}
+          containerClassName="grid grid-cols-2 md:grid-cols-4 gap-3"
           schema={[
             { key: 'title', label: 'Event Title', type: 'text' },
             { key: 'date', label: 'Date / Time', type: 'text' },
@@ -120,85 +108,47 @@ export const LatestEvents = () => {
             { key: 'type', label: 'Type (flagship, weekly, internal)', type: 'select', options: ['flagship', 'weekly', 'internal'] },
             { key: 'image', label: 'Image', type: 'image' },
             { key: 'video', label: 'Video URL (Optional)', type: 'text' },
+            { key: 'button1_show', label: 'Afficher le 1er bouton', type: 'toggle' },
+            { key: 'button1_label', label: 'Bouton 1 - Texte', type: 'text', showWhen: 'button1_show' },
+            { key: 'button1_url', label: 'Bouton 1 - URL', type: 'text', showWhen: 'button1_show' },
+            { key: 'button2_show', label: 'Afficher le 2e bouton', type: 'toggle' },
+            { key: 'button2_label', label: 'Bouton 2 - Texte', type: 'text', showWhen: 'button2_show' },
+            { key: 'button2_url', label: 'Bouton 2 - URL', type: 'text', showWhen: 'button2_show' },
           ]}
-          renderItem={(event, index) => {
-             const isHovered = hoveredIndex === index;
-             const isCompressed = hoveredIndex !== null && hoveredIndex !== index;
-             const isDark = index === 0 || event.type === 'internal';
-
-             return (
-               <motion.div
-                 role="button"
-                 tabIndex={0}
-                 onClick={() => setSelectedEvent(event)}
-                 onKeyDown={(e) => e.key === 'Enter' && setSelectedEvent(event)}
-                 onMouseEnter={() => setHoveredIndex(index)}
-                 onMouseLeave={() => setHoveredIndex(null)}
-                 className={`relative overflow-hidden cursor-pointer flex flex-col justify-end h-[280px] lg:h-full w-full
-                   ${isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-neutral-200'}`}
-                 initial={{ opacity: 0, y: 16 }}
-                 whileInView={{ opacity: 1, y: 0 }}
-                 viewport={{ once: true }}
-                 transition={{ duration: 0.5, delay: index * 0.08 }}
-               >
-                 {/* Type badge */}
-                 <div className={`absolute top-6 left-6 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest
-                   ${isDark ? 'bg-white/10 text-white' : 'bg-neutral-100 text-neutral-600'}`}>
-                   {event.type}
-                 </div>
-
-                 {/* Teal accent bar — slides in on hover */}
-                 <div
-                   className="absolute bottom-0 left-0 h-[3px] bg-teal-500 transition-all duration-500 ease-out"
-                   style={{ width: isHovered ? '100%' : '0%' }}
-                 />
-
-                 {/* Content */}
-                 <div className="relative z-10 p-6 lg:p-8">
-                   {/* Icon row */}
-                   <div className={`flex items-center gap-2 mb-3 transition-colors duration-300
-                     ${isDark ? 'text-teal-400' : 'text-teal-600'}`}>
-                     {event.type === 'internal' ? <Code className="w-4 h-4" /> :
-                      event.type === 'flagship' ? <Zap className="w-4 h-4" /> :
-                      <Mic className="w-4 h-4" />}
-                   </div>
-
-                   {/* Title */}
-                   <h3 className={`font-serif leading-tight transition-all duration-500
-                     ${isDark ? 'text-white' : 'text-neutral-900'}
-                     ${isHovered ? 'text-xl lg:text-3xl' : 'text-xl lg:text-2xl'}`}>
-                     {event.title}
-                   </h3>
-
-                   {/* Date + location — fade out when compressed on desktop */}
-                   <div className={`mt-3 flex flex-wrap gap-4 text-xs font-mono transition-opacity duration-400
-                     ${isDark ? 'text-neutral-400' : 'text-neutral-500'}
-                     ${isCompressed ? 'lg:opacity-50' : 'opacity-100'}`}>
-                     <div className="flex items-center gap-1.5">
-                       <Calendar className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" />
-                       <span>{event.date}</span>
-                     </div>
-                     {event.location && (
-                       <div className="flex items-center gap-1.5">
-                         <MapPin className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" />
-                         <span>{event.location}</span>
-                       </div>
-                     )}
-                   </div>
-
-                   {/* CTA — only shown when hovered */}
-                   <div className={`flex items-center gap-2 mt-4 text-xs font-bold uppercase tracking-widest text-teal-400 transition-all duration-400
-                     ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-                     <span>View details</span>
-                     <ArrowRight className="w-3.5 h-3.5" />
-                   </div>
-                 </div>
-               </motion.div>
-             );
-          }}
+          renderItem={(event) => (
+            <motion.div
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedEvent(event)}
+              onKeyDown={(e) => e.key === 'Enter' && setSelectedEvent(event)}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.3 }}
+              className="group cursor-pointer bg-white border border-neutral-200 rounded-md overflow-hidden hover:border-teal-300 hover:shadow transition-all"
+            >
+              <div className="aspect-[3/2] overflow-hidden bg-neutral-100">
+                <img
+                  src={event.image}
+                  alt={event.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              <div className="p-3">
+                <h3 className="font-serif text-sm md:text-base text-neutral-900 group-hover:text-teal-700 transition-colors line-clamp-2">
+                  {event.title}
+                </h3>
+                {event.date && (
+                  <p className="mt-1 flex items-center gap-1 text-xs text-neutral-500 font-mono">
+                    <Calendar className="w-3 h-3 text-teal-500 shrink-0" />
+                    {event.date}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          )}
         />
 
-        {/* Classic template pop-up card */}
         <AnimatePresence>
           {selectedEvent && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:p-8">
@@ -209,67 +159,46 @@ export const LatestEvents = () => {
                 onClick={() => setSelectedEvent(null)}
                 className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
               />
-
               <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col md:flex-row"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                className="bg-white w-full max-w-lg rounded-xl shadow-2xl overflow-hidden relative z-10"
               >
                 <button
                   onClick={() => setSelectedEvent(null)}
-                  className="absolute top-4 right-4 z-20 p-2 bg-white/50 hover:bg-white rounded-full transition-colors"
-                  aria-label="Close event details"
+                  className="absolute top-4 right-4 z-20 p-2 bg-white/90 hover:bg-white rounded-full shadow-sm transition-colors"
+                  aria-label="Close"
                 >
-                  <X className="w-6 h-6 text-neutral-900" />
+                  <X className="w-5 h-5 text-neutral-700" />
                 </button>
-
-                <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
+                <div className="aspect-video bg-neutral-100">
                   <img
                     src={selectedEvent.image}
                     alt={selectedEvent.title}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 text-xs font-mono uppercase tracking-wider border border-neutral-100">
-                    {selectedEvent.type}
-                  </div>
                 </div>
-
-                <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
-                  <div className="mb-6">
-                    <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 mb-4 leading-tight">
-                      {selectedEvent.title}
-                    </h2>
-
-                    <div className="flex flex-col gap-2 mb-8 border-l-2 border-teal-500 pl-4 py-1">
-                      <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
-                        <Calendar className="w-4 h-4 text-teal-600" />
-                        <span>{selectedEvent.date}</span>
-                      </div>
-                      {selectedEvent.location && (
-                        <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
-                          <MapPin className="w-4 h-4 text-teal-600" />
-                          <span>{selectedEvent.location}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <p className="text-neutral-600 leading-relaxed text-base">
-                      Explore this {selectedEvent.type} event with the IFT community. Click through to see more details, updates, and registration information.
+                <div className="p-6">
+                  <h2 className="text-xl font-serif text-neutral-900 mb-2">
+                    {selectedEvent.title}
+                  </h2>
+                  {selectedEvent.date && (
+                    <p className="flex items-center gap-2 text-sm text-neutral-600 font-mono mb-4">
+                      <Calendar className="w-4 h-4 text-teal-500" />
+                      {selectedEvent.date}
                     </p>
-                  </div>
-
-                  <div className="mt-auto pt-8 border-t border-neutral-100 flex gap-4">
-                    <button className="flex items-center gap-2 bg-neutral-900 text-white px-6 py-3 hover:bg-teal-600 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center relative overflow-hidden group shadow-lg hover:shadow-2xl hover:shadow-teal-500/20">
-                      <span className="absolute inset-0 w-0 bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:w-full transition-all duration-700 ease-out"></span>
-                      <Ticket className="w-4 h-4 relative z-10" />
-                      <span className="relative z-10">Register</span>
-                    </button>
-                    <button className="flex items-center gap-2 border border-neutral-200 text-neutral-900 px-6 py-3 hover:bg-neutral-50 hover:border-teal-400 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center hover:shadow-md">
-                      <Calendar className="w-4 h-4" />
-                      Add to Calendar
-                    </button>
-                  </div>
+                  )}
+                  {selectedEvent.location && (
+                    <p className="text-sm text-neutral-500 mb-4">{selectedEvent.location}</p>
+                  )}
+                  <CardButtons
+                    item={selectedEvent}
+                    defaultButtons={[
+                      { label: 'Register', primary: true },
+                      { label: 'Add to Calendar', primary: false },
+                    ]}
+                  />
                 </div>
               </motion.div>
             </div>

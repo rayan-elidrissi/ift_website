@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { EditableContent } from "./cms/EditableContent";
 import { EditableCollection } from "./cms/EditableCollection";
+import { CardButtons } from "./CardButtons";
 import { useCMS } from "../context/CMSContext";
 
 const educationPrograms = [
@@ -50,7 +51,7 @@ const educationPrograms = [
   },
 ];
 
-const defaultProjects = [
+export const defaultStudentProjects = [
   {
     id: "p1",
     title: "Bionic Prosthetics",
@@ -130,7 +131,7 @@ export const Education = () => {
   const allPrograms = getContent('edu-programs', educationPrograms) as typeof educationPrograms;
   const [activeProgram, setActiveProgram] = useState(allPrograms[0] || educationPrograms[0]);
   const [isHoveringList, setIsHoveringList] = useState(false);
-  const [viewingProject, setViewingProject] = useState<typeof defaultProjects[0] | null>(null);
+  const [viewingProject, setViewingProject] = useState<typeof defaultStudentProjects[0] | null>(null);
   const [isProjectDescriptionExpanded, setIsProjectDescriptionExpanded] = useState(false);
   const [hasProjectDescriptionOverflow, setHasProjectDescriptionOverflow] = useState(false);
   const projectDescriptionRef = useRef<HTMLDivElement | null>(null);
@@ -192,10 +193,12 @@ export const Education = () => {
         {/* LEFT COLUMN: List */}
         <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-32 lg:pt-32 flex flex-col justify-center bg-white/95 backdrop-blur-sm border-r border-neutral-200">
           <div className="mb-6">
-            <motion.h1
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-5xl md:text-7xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
+              role="heading"
+              aria-level={1}
             >
               <EditableContent
                 id="education-title"
@@ -203,9 +206,9 @@ export const Education = () => {
                 enableProse={false}
                 className="[&_p]:m-0"
               />
-            </motion.h1>
+            </motion.div>
 
-            <motion.p
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -217,9 +220,9 @@ export const Education = () => {
                 enableProse={false}
                 className="[&_p]:m-0"
               />
-            </motion.p>
+            </motion.div>
 
-            <h2 className="font-mono text-sm uppercase tracking-widest text-neutral-500 mb-2 flex items-center gap-2">
+            <div className="font-mono text-sm uppercase tracking-widest text-neutral-500 mb-2 flex items-center gap-2">
               <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
               <EditableContent
                 id="education-academic-tracks-label"
@@ -227,7 +230,7 @@ export const Education = () => {
                 enableProse={false}
                 className="[&_p]:inline [&_p]:m-0"
               />
-            </h2>
+            </div>
           </div>
 
           <div
@@ -311,7 +314,7 @@ export const Education = () => {
                 className="bg-white/90 backdrop-blur-md p-8 md:p-12 border border-white/50 shadow-2xl"
               >
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {activeProgram.tags.map((tag, i) => (
+                  {(Array.isArray(activeProgram.tags) ? activeProgram.tags : (activeProgram.tags || '').split(',')).map((tag: string, i: number) => (
                     <span
                       key={i}
                       className="px-3 py-1 border border-teal-200 bg-teal-50 rounded-full text-[10px] uppercase tracking-wider text-teal-800"
@@ -373,14 +376,14 @@ export const Education = () => {
           </div>
 
           <div className="lg:col-span-7">
-            <h2 className="text-4xl md:text-6xl font-serif mb-8 text-neutral-900">
+            <div className="text-4xl md:text-6xl font-serif mb-8 text-neutral-900" role="heading" aria-level={2}>
               <EditableContent
                 id="education-cursus-title"
                 defaultContent="Cursus & Philosophy"
                 enableProse={false}
                 className="[&_p]:m-0"
               />
-            </h2>
+            </div>
 
             <div className="space-y-12">
               <div className="flex gap-6">
@@ -388,14 +391,14 @@ export const Education = () => {
                   <Rocket className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-2">
+                  <div className="text-xl font-bold mb-2" role="heading" aria-level={3}>
                     <EditableContent
                       id="education-cursus-innovation-title"
                       defaultContent="Innovation & Autonomy"
                       enableProse={false}
                       className="[&_p]:m-0"
                     />
-                  </h3>
+                  </div>
                   <div className="text-neutral-600 leading-relaxed">
                     <EditableContent
                       id="edu-phil-1"
@@ -472,7 +475,7 @@ export const Education = () => {
 
           <EditableCollection
             id="edu-student-projects"
-            defaultData={defaultProjects}
+            defaultData={defaultStudentProjects}
             containerClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             schema={[
               {
@@ -500,6 +503,12 @@ export const Education = () => {
               label: "Visibility (shown / hidden)",
               type: "text",
             },
+            { key: "button1_show", label: "Afficher le 1er bouton", type: "toggle" },
+            { key: "button1_label", label: "Bouton 1 - Texte", type: "text", showWhen: "button1_show" },
+            { key: "button1_url", label: "Bouton 1 - URL", type: "text", showWhen: "button1_show" },
+            { key: "button2_show", label: "Afficher le 2e bouton", type: "toggle" },
+            { key: "button2_label", label: "Bouton 2 - Texte", type: "text", showWhen: "button2_show" },
+            { key: "button2_url", label: "Bouton 2 - URL", type: "text", showWhen: "button2_show" },
             ]}
           renderItem={(project: any, index: number, isEditingCollection: boolean) => {
             const isVisible = (project.visible ?? "shown") !== "hidden";
@@ -663,17 +672,13 @@ export const Education = () => {
                   </div>
                 </div>
 
-                <div className="shrink-0 pt-6 border-t border-neutral-100 flex gap-4 bg-white">
-                  <button className="flex items-center gap-2 bg-neutral-900 text-white px-6 py-3 hover:bg-teal-600 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center relative overflow-hidden group shadow-lg hover:shadow-2xl hover:shadow-teal-500/20">
-                    <span className="absolute inset-0 w-0 bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:w-full transition-all duration-700 ease-out"></span>
-                    <ExternalLink className="w-4 h-4 relative z-10" />
-                    <span className="relative z-10">View Full Project</span>
-                  </button>
-                  <button className="flex items-center gap-2 border border-neutral-200 text-neutral-900 px-6 py-3 hover:bg-neutral-50 hover:border-teal-400 transition-all duration-300 uppercase text-xs font-bold tracking-widest flex-1 justify-center hover:shadow-md">
-                     <ExternalLink className="w-4 h-4" />
-                     Share
-                  </button>
-                </div>
+                <CardButtons
+                  item={viewingProject}
+                  defaultButtons={[
+                    { label: "View Full Project", primary: true },
+                    { label: "Share", primary: false },
+                  ]}
+                />
               </div>
             </motion.div>
           </div>

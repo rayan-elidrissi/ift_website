@@ -8,8 +8,10 @@ import { CMSModal } from './CMSModal';
 interface FieldSchema {
   key: string;
   label: string;
-  type: 'text' | 'image' | 'video' | 'textarea' | 'select';
+  type: 'text' | 'image' | 'video' | 'textarea' | 'select' | 'toggle';
   options?: string[]; // For select
+  /** Only render this field when formData[showWhen] is truthy */
+  showWhen?: string;
 }
 
 interface EditModalProps {
@@ -45,12 +47,32 @@ const EditModal = ({ isOpen, onClose, onSave, data, schema, title }: EditModalPr
       size="md"
     >
       <div className="p-6 space-y-4">
-        {schema.map((field) => (
+        {schema.map((field) => {
+          const showWhenOk = !field.showWhen || !!formData[field.showWhen];
+          if (!showWhenOk) return null;
+
+          return (
           <div key={field.key} className="space-y-2">
             <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600">
               {field.label}
             </label>
-            {field.type === 'textarea' ? (
+            {field.type === 'toggle' ? (
+              <button
+                type="button"
+                role="switch"
+                aria-checked={formData[field.key] === 'true'}
+                onClick={() => handleChange(field.key, formData[field.key] === 'true' ? 'false' : 'true')}
+                className={`relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
+                  formData[field.key] === 'true' ? 'bg-teal-600' : 'bg-neutral-200'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow ring-0 transition ${
+                    formData[field.key] === 'true' ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            ) : field.type === 'textarea' ? (
               <textarea
                 value={formData[field.key] || ''}
                 onChange={(e) => handleChange(field.key, e.target.value)}
@@ -89,7 +111,8 @@ const EditModal = ({ isOpen, onClose, onSave, data, schema, title }: EditModalPr
               />
             )}
           </div>
-        ))}
+        );
+        })}
       </div>
     </CMSModal>
   );
