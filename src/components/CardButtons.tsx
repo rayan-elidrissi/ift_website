@@ -14,9 +14,14 @@ interface CardButtonsProps {
   defaultButtons?: ButtonConfig[];
 }
 
-/** Show button if toggled on, or if show is unset (legacy data) and label exists */
+/** Show button only when toggle is explicitly on. When off or unset, never show. */
 const shouldShowButton = (show: unknown, hasLabel: boolean): boolean =>
-  hasLabel && (show === 'true' || show === true || show === undefined || show === '');
+  hasLabel && (show === 'true' || show === true);
+
+/** Both toggles explicitly off = user chose to hide all buttons; don't show defaults. */
+const bothTogglesExplicitlyOff = (item: Record<string, unknown>): boolean =>
+  (item.button1_show === 'false' || item.button1_show === false) &&
+  (item.button2_show === 'false' || item.button2_show === false);
 
 const getButtons = (item: Record<string, unknown>, defaultButtons?: ButtonConfig[]): ButtonConfig[] => {
   const buttons: ButtonConfig[] = [];
@@ -34,6 +39,7 @@ const getButtons = (item: Record<string, unknown>, defaultButtons?: ButtonConfig
     }
   }
   if (buttons.length > 0) return buttons;
+  if (bothTogglesExplicitlyOff(item)) return [];
   return defaultButtons ?? [];
 };
 

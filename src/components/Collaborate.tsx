@@ -168,7 +168,7 @@ export const Collaborate = () => {
                 { key: 'description', label: 'Description', type: 'textarea' },
                 { key: 'points', label: 'Points (comma separated)', type: 'text' },
                 { key: 'cta', label: 'CTA Button Text', type: 'text' },
-                { key: 'cta_url', label: 'CTA URL (/page ou https://...)', type: 'text' },
+                { key: 'cta_url', label: 'CTA URL (/page or https://...)', type: 'text' },
                 { key: 'image', label: 'Image', type: 'image' },
               ]}
               renderItem={(type: any, _index: number, _isEditing: boolean) => {

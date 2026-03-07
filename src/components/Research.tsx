@@ -2,10 +2,11 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { FileText, Share2, Filter, ArrowUpRight, Download, Calendar, X } from 'lucide-react';
+import { FileText, Share2, Filter, ArrowUpRight, Download, Calendar, X, PenTool, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { EditableCollection } from './cms/EditableCollection';
 import { EditableContent } from './cms/EditableContent';
 import { CardButtons } from './CardButtons';
+import { CMSModal } from './cms/CMSModal';
 import { useCMS } from '../context/CMSContext';
 
 const researchThemes = [
@@ -123,36 +124,188 @@ export const defaultPublications = [
   }
 ];
 
-// Helper to map tags to main categories
-const matchesCategory = (tags: string[] | string | undefined, category: string) => {
-  if (category === 'All') return true;
+// Default filter categories (label + comma-separated keywords; empty keywords = match all)
+const defaultFilterCategories = [
+  { id: 'all', label: 'All', keywords: '' },
+  { id: 'hci', label: 'HCI', keywords: 'hci,vr,ar,haptics,ux,interfaces,web' },
+  { id: 'bio', label: 'Bioengineering', keywords: 'bio,health,materials,living' },
+  { id: 'robotics', label: 'Robotics', keywords: 'robotics,drone,automation' },
+];
+
+// Helper to check if publication tags match a category (category has { label, keywords })
+const matchesCategory = (
+  tags: string[] | string | undefined,
+  category: { label: string; keywords: string }
+) => {
+  const keywords = (category.keywords || '').trim();
+  if (!keywords) return true; // "All" or empty = match everything
   const arr = Array.isArray(tags) ? tags : (tags || '').split(',').map(t => t.trim()).filter(Boolean);
   const lowerTags = arr.map(t => t.toLowerCase());
-  
-  if (category === 'HCI') {
-    return lowerTags.some(t => ['hci', 'vr', 'ar', 'haptics', 'ux', 'interfaces', 'web'].some(k => t.includes(k)));
-  }
-  if (category === 'Robotics') {
-    return lowerTags.some(t => ['robotics', 'drone', 'automation'].some(k => t.includes(k)));
-  }
-  if (category === 'Bioengineering') {
-    return lowerTags.some(t => ['bio', 'health', 'materials', 'living'].some(k => t.includes(k)));
-  }
-  return false;
+  const lowerKeywords = keywords.split(',').map(k => k.trim().toLowerCase()).filter(Boolean);
+  return lowerTags.some(t => lowerKeywords.some(k => t.includes(k)));
+};
+
+type FilterCategory = { id?: string; label: string; keywords: string };
+
+interface CategoriesEditModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  categories: FilterCategory[];
+  onSave: (newCategories: FilterCategory[]) => void;
+}
+
+const CategoriesEditModal = ({ isOpen, onClose, categories, onSave }: CategoriesEditModalProps) => {
+  const [localCategories, setLocalCategories] = useState<FilterCategory[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLocalCategories(categories.map(c => ({ ...c, id: c.id || `cat-${Date.now()}-${Math.random().toString(36).slice(2)}` })));
+    }
+  }, [isOpen, categories]);
+
+  const handleChange = (index: number, field: 'label' | 'keywords', value: string) => {
+    setLocalCategories(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const handleAdd = () => {
+    setLocalCategories(prev => [...prev, { id: `cat-${Date.now()}`, label: 'New Category', keywords: '' }]);
+  };
+
+  const handleDelete = (index: number) => {
+    if (localCategories.length <= 1) return;
+    if (confirm('Remove this category?')) {
+      setLocalCategories(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleMove = (index: number, direction: 'up' | 'down') => {
+    const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= localCategories.length) return;
+    setLocalCategories(prev => {
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  const handleSave = () => {
+    onSave(localCategories);
+    onClose();
+  };
+
+  return (
+    <CMSModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onSave={handleSave}
+      title="Edit Filter Categories"
+      size="lg"
+    >
+      <div className="p-6 space-y-4">
+        <p className="text-sm text-neutral-500 mb-4">
+          Categories filter papers by matching their tags to keywords. Use comma-separated keywords (e.g. hci,vr,haptics). Leave keywords empty for &quot;All&quot;.
+        </p>
+        <div className="space-y-3 max-h-[50vh] overflow-y-auto">
+          {localCategories.map((cat, index) => (
+            <div
+              key={cat.id ?? index}
+              className="flex gap-2 items-start p-3 border border-neutral-200 rounded-lg bg-neutral-50/50"
+            >
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-0">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">Label</label>
+                  <input
+                    type="text"
+                    value={cat.label}
+                    onChange={(e) => handleChange(index, 'label', e.target.value)}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                    placeholder="e.g. HCI"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">Keywords (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={cat.keywords || ''}
+                    onChange={(e) => handleChange(index, 'keywords', e.target.value)}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                    placeholder="e.g. hci,vr,haptics (empty = All)"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleMove(index, 'up')}
+                  disabled={index === 0}
+                  className="p-1.5 rounded border border-neutral-300 bg-white hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Move up"
+                >
+                  <ArrowUp className="w-4 h-4 text-neutral-600" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMove(index, 'down')}
+                  disabled={index === localCategories.length - 1}
+                  className="p-1.5 rounded border border-neutral-300 bg-white hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Move down"
+                >
+                  <ArrowDown className="w-4 h-4 text-neutral-600" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(index)}
+                  disabled={localCategories.length <= 1}
+                  className="p-1.5 rounded border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={handleAdd}
+          className="flex items-center gap-2 w-full py-3 border-2 border-dashed border-neutral-300 rounded-lg text-neutral-500 hover:border-teal-500 hover:text-teal-600 transition-colors font-medium text-sm"
+        >
+          <Plus className="w-4 h-4" />
+          Add Category
+        </button>
+      </div>
+    </CMSModal>
+  );
 };
 
 export const Research = () => {
-  const { getContent, isEditing } = useCMS();
+  const { getContent, updateContent, isEditing, canEditKey } = useCMS();
   const allPublications = getContent('research-publications', defaultPublications);
+  const filterCategories = getContent('research-filter-categories', defaultFilterCategories) as typeof defaultFilterCategories;
   
   const [selectedYear, setSelectedYear] = useState('All');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState(filterCategories[0]?.label ?? 'All');
   const [activeTheme, setActiveTheme] = useState(researchThemes[0]);
   const [viewingPaper, setViewingPaper] = useState<typeof allPublications[0] | null>(null);
   const [isPaperAbstractExpanded, setIsPaperAbstractExpanded] = useState(false);
   const [hasPaperAbstractOverflow, setHasPaperAbstractOverflow] = useState(false);
   const paperAbstractRef = useRef<HTMLDivElement | null>(null);
   const [isHoveringList, setIsHoveringList] = useState(false);
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+
+  const canEditCategories = isEditing && canEditKey('research-filter-categories');
+
+  // Reset selected category if it was removed from the list
+  useEffect(() => {
+    const exists = filterCategories.some(c => c.label === selectedCategory);
+    if (!exists && filterCategories.length > 0) {
+      setSelectedCategory(filterCategories[0].label);
+    }
+  }, [filterCategories, selectedCategory]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -194,13 +347,19 @@ export const Research = () => {
     };
   }, [viewingPaper, isPaperAbstractExpanded]);
 
+  // Reset selected category if it was removed from the list
+  useEffect(() => {
+    const exists = filterCategories.some(c => c.label === selectedCategory);
+    if (!exists && filterCategories.length > 0) {
+      setSelectedCategory(filterCategories[0].label);
+    }
+  }, [filterCategories, selectedCategory]);
+
   // Extract unique years and sort descending
   const years = useMemo(() => {
     const uniqueYears = Array.from(new Set(allPublications.map((p: any) => p.year)));
     return ['All', ...uniqueYears.sort((a: any, b: any) => b.localeCompare(a))];
   }, [allPublications]);
-
-  const categories = ['All', 'HCI', 'Bioengineering', 'Robotics'];
 
   // Filter full publications
   const filteredPublications = useMemo(() => {
@@ -212,12 +371,13 @@ export const Research = () => {
     }
 
     // Filter by Category
-    if (selectedCategory !== 'All') {
-      pubs = pubs.filter(p => matchesCategory(p.tags, selectedCategory));
+    const cat = filterCategories.find(c => c.label === selectedCategory);
+    if (cat && (cat.keywords || '').trim()) {
+      pubs = pubs.filter(p => matchesCategory(p.tags, cat));
     }
 
     return pubs;
-  }, [selectedYear, selectedCategory, allPublications]);
+  }, [selectedYear, selectedCategory, filterCategories, allPublications]);
 
   return (
     <div className="bg-white min-h-screen text-neutral-900 relative font-sans selection:bg-teal-200 selection:text-black">
@@ -373,9 +533,6 @@ export const Research = () => {
               </AnimatePresence>
            </div>
            
-           <div className="absolute top-8 right-8 font-mono text-xs text-neutral-400 writing-vertical-rl z-20 mix-blend-difference text-white">
-              RESEARCH_THEMES
-           </div>
            <div className="absolute bottom-8 right-8 font-mono text-[100px] leading-none text-white/20 font-bold z-0 mix-blend-overlay">
               {activeTheme.id}
            </div>
@@ -401,8 +558,24 @@ export const Research = () => {
          <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
                <div>
-                  <h2 className="text-4xl md:text-5xl font-serif text-neutral-900 mb-4">All Publications</h2>
-                  <p className="text-neutral-500 font-sans mb-8">Chronological archive of all published research.</p>
+                  <h2 className="text-4xl md:text-5xl font-serif text-neutral-900 mb-4">
+                    <EditableContent
+                      id="research-all-publications-title"
+                      defaultContent="All Publications"
+                      enableProse={false}
+                      multiline={false}
+                      className="[&_p]:m-0"
+                    />
+                  </h2>
+                  <p className="text-neutral-500 font-sans mb-8">
+                    <EditableContent
+                      id="research-all-publications-desc"
+                      defaultContent="Chronological archive of all published research."
+                      enableProse={false}
+                      multiline={false}
+                      className="[&_p]:m-0"
+                    />
+                  </p>
 
                   {/* Year Filter */}
                   <div className="flex items-center gap-6 text-sm font-mono uppercase tracking-widest overflow-x-auto pb-2 scrollbar-hide">
@@ -428,27 +601,36 @@ export const Research = () => {
                   </div>
                </div>
                
-               {/* Category Filter */}
+               {/* Category Filter (CMS-editable via pen button modal) */}
                <div className="md:text-right">
-                  <div className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-4">Category</div>
-                  <div className="flex flex-wrap md:justify-end gap-3">
-                    {categories.map(cat => (
+                  <div className={`flex flex-wrap md:justify-end gap-3 items-center relative ${canEditCategories ? 'group outline-2 outline-dashed outline-teal-500/50 hover:bg-teal-50/50 rounded-lg p-3 transition-all' : ''}`}>
+                    {canEditCategories && (
                       <button
-                        key={cat}
-                        onClick={() => setSelectedCategory(cat)}
-                        className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border transition-all duration-300 relative overflow-hidden group ${
-                          selectedCategory === cat 
+                        onClick={(e) => { e.stopPropagation(); setShowCategoriesModal(true); }}
+                        className="absolute -top-2 -right-2 bg-teal-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-lg hover:bg-teal-700"
+                        title="Edit categories"
+                        aria-label="Edit filter categories"
+                      >
+                        <PenTool className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    {filterCategories.map((cat: { id?: string; label: string; keywords: string }) => (
+                      <button
+                        key={cat.id ?? cat.label}
+                        onClick={() => setSelectedCategory(cat.label)}
+                        className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border transition-all duration-300 relative overflow-hidden ${
+                          selectedCategory === cat.label 
                             ? 'bg-teal-600 border-teal-600 text-white shadow-lg' 
                             : 'bg-white border-neutral-300 text-neutral-600 hover:border-teal-400 hover:shadow-md'
                         }`}
                       >
-                        {selectedCategory === cat && (
+                        {selectedCategory === cat.label && (
                           <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite]"></span>
                         )}
-                        <span className="relative z-10">{cat}</span>
+                        <span className="relative z-10">{cat.label}</span>
                       </button>
                     ))}
-                   </div>
+                  </div>
                 </div>
             </div>
 
@@ -458,55 +640,55 @@ export const Research = () => {
                       id="research-publications"
                       defaultData={defaultPublications}
                       displayItems={filteredPublications}
+                      allowAddWhenFiltered
                       schema={[
                         { key: 'title', label: 'Title', type: 'text' },
                         { key: 'authors', label: 'Authors', type: 'text' },
                         { key: 'year', label: 'Year', type: 'text' },
                         { key: 'journal', label: 'Journal/Conference', type: 'text' },
                         { key: 'abstract', label: 'Abstract', type: 'textarea' },
-                        { key: 'image', label: 'Image', type: 'image' },
-                        { key: 'video', label: 'Video (Optional)', type: 'video' },
+                        { key: 'media', label: 'Media', type: 'image' },
                         { key: 'tags', label: 'Tags (comma separated array)', type: 'text' },
-                        { key: 'featured', label: 'Featured? (true/false)', type: 'text' },
-                        { key: 'button1_show', label: 'Afficher le 1er bouton', type: 'toggle' },
-                        { key: 'button1_label', label: 'Bouton 1 - Texte', type: 'text', showWhen: 'button1_show' },
-                        { key: 'button1_url', label: 'Bouton 1 - URL', type: 'text', showWhen: 'button1_show' },
-                        { key: 'button2_show', label: 'Afficher le 2e bouton', type: 'toggle' },
-                        { key: 'button2_label', label: 'Bouton 2 - Texte', type: 'text', showWhen: 'button2_show' },
-                        { key: 'button2_url', label: 'Bouton 2 - URL', type: 'text', showWhen: 'button2_show' },
+                        { key: 'featured', label: 'Featured', type: 'toggle' },
+                        { key: 'button1_show', label: 'Show button 1', type: 'toggle' },
+                        { key: 'button1_label', label: 'Button 1 - Text', type: 'text', showWhen: 'button1_show' },
+                        { key: 'button1_url', label: 'Button 1 - URL', type: 'text', showWhen: 'button1_show' },
+                        { key: 'button2_show', label: 'Show button 2', type: 'toggle' },
+                        { key: 'button2_label', label: 'Button 2 - Text', type: 'text', showWhen: 'button2_show' },
+                        { key: 'button2_url', label: 'Button 2 - URL', type: 'text', showWhen: 'button2_show' },
                       ]}
                       containerClassName="contents"
-                      renderItem={(pub: any, index: number) => (
+                      renderItem={(pub: any, index: number, isEditing: boolean, openEditModal) => (
                          <motion.div 
                            key={`pub-${pub.id}`}
                            initial={{ opacity: 0, y: 50 }}
                            whileInView={{ opacity: 1, y: 0 }}
                            viewport={{ once: true }}
                            transition={{ delay: 0.05 }}
-                           onClick={() => setViewingPaper(pub)}
+                           onClick={(e) => {
+                             if (isEditing && openEditModal) {
+                               e.stopPropagation();
+                               openEditModal();
+                             } else {
+                               setViewingPaper(pub);
+                             }
+                           }}
                            className="break-inside-avoid mb-8 group bg-white border border-neutral-200 hover:border-teal-500 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col shadow-sm hover:shadow-2xl relative"
                          >
                             {/* Decorative corner */}
                             <div className="absolute top-0 right-0 w-8 h-8 bg-neutral-100 -mr-4 -mt-4 rotate-45 transform group-hover:bg-teal-500 transition-colors z-20"></div>
 
-                            {/* Image or Video */}
+                            {/* Media (image or video) */}
                             <div className="w-full aspect-video bg-neutral-100 overflow-hidden relative">
-                               {pub.video ? (
-                                 <video 
-                                   src={pub.video}
-                                   autoPlay
-                                   loop
-                                   muted
-                                   playsInline
-                                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                 />
-                               ) : (
-                                 <img 
-                                   src={pub.image} 
-                                   alt={pub.title} 
-                                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                 />
-                               )}
+                               {(() => {
+                                 const src = pub.media || pub.video || pub.image;
+                                 const isVideo = typeof src === 'string' && (src.startsWith('data:video/') || /\.(mp4|webm|ogg)(\?|$)/i.test(src));
+                                 return isVideo ? (
+                                   <video src={src} autoPlay loop muted playsInline className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                 ) : (
+                                   <img src={src} alt={pub.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                 );
+                               })()}
                                <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-neutral-900 border border-neutral-200">
                                   {pub.year}
                                </div>
@@ -553,7 +735,7 @@ export const Research = () => {
                      </div>
                      <p className="text-neutral-500 font-mono text-sm">No research found for these filters.</p>
                      <button 
-                        onClick={() => {setSelectedYear('All'); setSelectedCategory('All');}}
+                        onClick={() => {setSelectedYear('All'); setSelectedCategory(filterCategories[0]?.label ?? 'All');}}
                         className="mt-4 text-teal-600 hover:underline text-xs uppercase tracking-widest font-bold"
                       >
                         Clear Filters
@@ -592,23 +774,15 @@ export const Research = () => {
 
               {/* Media Section - Left Side (Landscape/Rectangular) */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
-                {viewingPaper.video ? (
-                  <video 
-                    src={viewingPaper.video}
-                    controls
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <img 
-                    src={viewingPaper.image} 
-                    alt={viewingPaper.title} 
-                    className="w-full h-full object-cover"
-                  />
-                )}
+                {(() => {
+                  const src = viewingPaper.media || viewingPaper.video || viewingPaper.image;
+                  const isVideo = typeof src === 'string' && (src.startsWith('data:video/') || /\.(mp4|webm|ogg)(\?|$)/i.test(src));
+                  return isVideo ? (
+                    <video src={src} controls autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                  ) : (
+                    <img src={src} alt={viewingPaper.title} className="w-full h-full object-cover" />
+                  );
+                })()}
                 <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 text-xs font-mono uppercase tracking-wider border border-neutral-100">
                   {viewingPaper.year}
                 </div>
@@ -688,6 +862,16 @@ export const Research = () => {
         )}
       </AnimatePresence>
 
+      {/* Categories Edit Modal */}
+      <CategoriesEditModal
+        isOpen={showCategoriesModal}
+        onClose={() => setShowCategoriesModal(false)}
+        categories={filterCategories}
+        onSave={(newCategories) => {
+          updateContent('research-filter-categories', newCategories);
+          setShowCategoriesModal(false);
+        }}
+      />
     </div>
   );
 };

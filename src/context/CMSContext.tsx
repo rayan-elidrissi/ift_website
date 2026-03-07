@@ -106,7 +106,7 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
     setData((prev) => ({ ...prev, [key]: newContent }));
 
     if (!api.isApiConfigured()) {
-      toast.error('API non configurée. Définissez VITE_API_URL.');
+      toast.error('API not configured. Set VITE_API_URL.');
       return;
     }
     const slug = getSlugForKey(key);
@@ -117,7 +117,7 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const resource = await api.getResource(slug, 'Draft') ?? await api.getResource(slug, 'Published');
       if (!resource) {
-        toast.error('Resource non trouvée. Lancez la migration depuis /migrate');
+        toast.error('Resource not found. Run migration from /migrate');
         loadData();
         return;
       }
@@ -149,7 +149,7 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Could not save.';
       if (msg.includes('fetch') || msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-        toast.error('API inaccessible. Vérifiez que le backend tourne (npm run backend).');
+        toast.error('API unreachable. Ensure the backend is running (npm run backend).');
       } else {
         toast.error(msg);
       }

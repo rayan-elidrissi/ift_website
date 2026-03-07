@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Plus, Trash2, Edit2, Image as ImageIcon, ArrowUp, ArrowDown } from 'lucide-react';
 import { useCMS } from '../../context/CMSContext';
+import { Switch } from '../ui/switch';
 import { EditableVideo } from './EditableVideo';
 import { EditableImage } from './EditableImage';
 import { CMSModal } from './CMSModal';
@@ -27,11 +28,17 @@ const EditModal = ({ isOpen, onClose, onSave, data, schema, title }: EditModalPr
   const [formData, setFormData] = useState(data || {});
 
   useEffect(() => {
-    setFormData(data || {});
-  }, [data, isOpen]);
+    const raw = data || {};
+    const normalized = { ...raw };
+    // When schema has 'media' field, populate from image/video for backward compat
+    if (schema.some(f => f.key === 'media') && !normalized.media && (normalized.image || normalized.video)) {
+      normalized.media = normalized.image || normalized.video;
+    }
+    setFormData(normalized);
+  }, [data, isOpen, schema]);
 
   const handleChange = (key: string, value: any) => {
-    setFormData({ ...formData, [key]: value });
+    setFormData(prev => ({ ...prev, [key]: value }));
   };
 
   const handleSave = () => {
@@ -48,67 +55,87 @@ const EditModal = ({ isOpen, onClose, onSave, data, schema, title }: EditModalPr
     >
       <div className="p-6 space-y-4">
         {schema.map((field) => {
-          const showWhenOk = !field.showWhen || !!formData[field.showWhen];
+          const showWhenOk = !field.showWhen || (formData[field.showWhen] === 'true' || formData[field.showWhen] === true);
           if (!showWhenOk) return null;
+
+          const isToggleOn = formData[field.key] === 'true' || formData[field.key] === true;
 
           return (
           <div key={field.key} className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600">
-              {field.label}
-            </label>
             {field.type === 'toggle' ? (
-              <button
-                type="button"
-                role="switch"
-                aria-checked={formData[field.key] === 'true'}
-                onClick={() => handleChange(field.key, formData[field.key] === 'true' ? 'false' : 'true')}
-                className={`relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
-                  formData[field.key] === 'true' ? 'bg-teal-600' : 'bg-neutral-200'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow ring-0 transition ${
-                    formData[field.key] === 'true' ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            ) : field.type === 'textarea' ? (
-              <textarea
-                value={formData[field.key] || ''}
-                onChange={(e) => handleChange(field.key, e.target.value)}
-                className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none min-h-[120px] text-sm"
-              />
-            ) : field.type === 'select' ? (
-               <select
-                  value={formData[field.key] || ''}
-                  onChange={(e) => handleChange(field.key, e.target.value)}
-                  className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none text-sm"
-               >
-                  <option value="">Select...</option>
-                  {field.options?.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
-                  ))}
-               </select>
-            ) : field.type === 'video' ? (
-              <EditableVideo
-                value={formData[field.key] || ''}
-                onChange={(value) => handleChange(field.key, value)}
-                label={field.label}
-              />
+              <label className="flex items-center justify-between gap-4 w-full py-2 px-3 -mx-3 rounded-lg hover:bg-neutral-50 transition-colors cursor-pointer">
+                <span className="text-xs font-bold uppercase tracking-wider text-neutral-600 shrink-0">
+                  {field.label}
+                </span>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={isToggleOn}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleChange(field.key, e.target.checked ? 'true' : 'false');
+                    }}
+                    className="sr-only"
+                    aria-hidden
+                  />
+                  <span
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${
+                      isToggleOn ? 'bg-green-600' : 'bg-red-500'
+                    }`}
+                    aria-hidden
+                  >
+                    <span
+                      className={`pointer-events-none absolute top-0.5 left-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                        isToggleOn ? 'translate-x-5' : 'translate-x-0.5'
+                      }`}
+                    />
+                  </span>
+                </div>
+              </label>
             ) : field.type === 'image' ? (
-              <EditableImage
-                value={formData[field.key] || ''}
-                onChange={(value) => handleChange(field.key, value)}
-                label={field.label}
-              />
+              <>
+                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600">
+                  {field.label}
+                </label>
+                <EditableImage
+                  value={formData[field.key] || ''}
+                  onChange={(value) => handleChange(field.key, value)}
+                  label={field.label}
+                  hideLabel
+                />
+              </>
             ) : (
-              <input
-                type="text"
-                value={formData[field.key] || ''}
-                onChange={(e) => handleChange(field.key, e.target.value)}
-                className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none text-sm"
-                placeholder={`Enter ${field.label.toLowerCase()}`}
-              />
+              <>
+                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600">
+                  {field.label}
+                </label>
+                {field.type === 'textarea' ? (
+                  <textarea
+                    value={formData[field.key] || ''}
+                    onChange={(e) => handleChange(field.key, e.target.value)}
+                    className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none min-h-[120px] text-sm"
+                  />
+                ) : field.type === 'select' ? (
+                  <select
+                    value={formData[field.key] || ''}
+                    onChange={(e) => handleChange(field.key, e.target.value)}
+                    className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none text-sm"
+                  >
+                    <option value="">Select...</option>
+                    {field.options?.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={formData[field.key] || ''}
+                    onChange={(e) => handleChange(field.key, e.target.value)}
+                    className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none text-sm"
+                    placeholder={`Enter ${field.label.toLowerCase()}`}
+                  />
+                )}
+              </>
             )}
           </div>
         );
@@ -121,12 +148,14 @@ const EditModal = ({ isOpen, onClose, onSave, data, schema, title }: EditModalPr
 interface EditableCollectionProps<T> {
   id: string;
   defaultData: T[];
-  renderItem: (item: T, index: number, isEditing: boolean) => React.ReactNode;
+  renderItem: (item: T, index: number, isEditing: boolean, openEditModal?: () => void) => React.ReactNode;
   schema: FieldSchema[];
   itemClassName?: string;
   containerClassName?: string;
   maxItems?: number;
   getItemStyle?: (item: T, index: number) => React.CSSProperties;
+  /** When using displayItems (filtered view), show Add button if true. Default: false. */
+  allowAddWhenFiltered?: boolean;
 }
 
 export const EditableCollection = <T extends { id?: string }>({ 
@@ -138,7 +167,8 @@ export const EditableCollection = <T extends { id?: string }>({
   containerClassName = "",
   maxItems,
   getItemStyle,
-  displayItems // New prop for filtered views
+  allowAddWhenFiltered = false,
+  displayItems,
 }: EditableCollectionProps<T> & { displayItems?: T[] }) => {
   const { isEditing, getContent, updateContent, canEditKey } = useCMS();
   const editable = isEditing && canEditKey(id);
@@ -199,7 +229,7 @@ export const EditableCollection = <T extends { id?: string }>({
       <div className={containerClassName}>
         {itemsToRender.map((item, index) => (
           <div key={item.id || index} className={`relative group ${itemClassName}`} style={getItemStyle ? getItemStyle(item, index) : undefined}>
-            {renderItem(item, index, editable)}
+            {renderItem(item, index, editable, () => setEditingItem(item))}
             
             {editable && (
               <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -236,7 +266,7 @@ export const EditableCollection = <T extends { id?: string }>({
           </div>
         ))}
         
-        {editable && (!maxItems || items.length < maxItems) && !displayItems && (
+        {editable && (!maxItems || items.length < maxItems) && (!displayItems || allowAddWhenFiltered) && (
           <button
             onClick={() => setIsAdding(true)}
             className={`flex items-center justify-center border-2 border-dashed border-neutral-300 hover:border-teal-500 hover:text-teal-600 text-neutral-400 rounded-lg transition-colors p-8 min-h-[200px] w-full ${itemClassName}`}

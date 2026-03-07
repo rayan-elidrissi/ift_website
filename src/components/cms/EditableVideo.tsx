@@ -5,9 +5,11 @@ interface EditableVideoProps {
   value: string;
   onChange: (value: string) => void;
   label: string;
+  /** When true, do not render the label (parent provides it). Default: false. */
+  hideLabel?: boolean;
 }
 
-export const EditableVideo = ({ value, onChange, label }: EditableVideoProps) => {
+export const EditableVideo = ({ value, onChange, label, hideLabel = false }: EditableVideoProps) => {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,9 +72,11 @@ export const EditableVideo = ({ value, onChange, label }: EditableVideoProps) =>
 
   return (
     <div className="space-y-2">
-      <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500">
-        {label}
-      </label>
+      {!hideLabel && (
+        <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500">
+          {label}
+        </label>
+      )}
 
       {value ? (
         <div className="space-y-2">

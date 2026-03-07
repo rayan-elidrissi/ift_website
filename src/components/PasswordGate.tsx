@@ -32,7 +32,7 @@ export const PasswordGate = () => {
       window.dispatchEvent(new Event('ift_auth_change'));
       setPassword('');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erreur de connexion.';
+      const msg = err instanceof Error ? err.message : 'Connection error.';
       setError(msg);
     } finally {
       setLoading(false);

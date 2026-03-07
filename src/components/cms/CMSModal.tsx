@@ -59,8 +59,8 @@ export const CMSModal = ({
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-grow overflow-auto">
+        {/* Content - stopPropagation prevents clicks from closing modal or being captured by parent */}
+        <div className="flex-grow overflow-auto" onClick={(e) => e.stopPropagation()}>
           {children}
         </div>
 

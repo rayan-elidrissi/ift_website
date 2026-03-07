@@ -339,9 +339,6 @@ export const Education = () => {
             </AnimatePresence>
           </div>
 
-          <div className="absolute top-8 right-8 font-mono text-xs text-neutral-400 writing-vertical-rl z-20 mix-blend-difference text-white">
-            EDUCATION_PROGRAMS
-          </div>
           <div className="absolute bottom-8 right-8 font-mono text-[100px] leading-none text-white/20 font-bold z-0 mix-blend-overlay">
             {activeProgram.id}
           </div>
@@ -503,12 +500,12 @@ export const Education = () => {
               label: "Visibility (shown / hidden)",
               type: "text",
             },
-            { key: "button1_show", label: "Afficher le 1er bouton", type: "toggle" },
-            { key: "button1_label", label: "Bouton 1 - Texte", type: "text", showWhen: "button1_show" },
-            { key: "button1_url", label: "Bouton 1 - URL", type: "text", showWhen: "button1_show" },
-            { key: "button2_show", label: "Afficher le 2e bouton", type: "toggle" },
-            { key: "button2_label", label: "Bouton 2 - Texte", type: "text", showWhen: "button2_show" },
-            { key: "button2_url", label: "Bouton 2 - URL", type: "text", showWhen: "button2_show" },
+            { key: "button1_show", label: "Show button 1", type: "toggle" },
+            { key: "button1_label", label: "Button 1 - Text", type: "text", showWhen: "button1_show" },
+            { key: "button1_url", label: "Button 1 - URL", type: "text", showWhen: "button1_show" },
+            { key: "button2_show", label: "Show button 2", type: "toggle" },
+            { key: "button2_label", label: "Button 2 - Text", type: "text", showWhen: "button2_show" },
+            { key: "button2_url", label: "Button 2 - URL", type: "text", showWhen: "button2_show" },
             ]}
           renderItem={(project: any, index: number, isEditingCollection: boolean) => {
             const isVisible = (project.visible ?? "shown") !== "hidden";

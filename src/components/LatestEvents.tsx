@@ -108,12 +108,12 @@ export const LatestEvents = () => {
             { key: 'type', label: 'Type (flagship, weekly, internal)', type: 'select', options: ['flagship', 'weekly', 'internal'] },
             { key: 'image', label: 'Image', type: 'image' },
             { key: 'video', label: 'Video URL (Optional)', type: 'text' },
-            { key: 'button1_show', label: 'Afficher le 1er bouton', type: 'toggle' },
-            { key: 'button1_label', label: 'Bouton 1 - Texte', type: 'text', showWhen: 'button1_show' },
-            { key: 'button1_url', label: 'Bouton 1 - URL', type: 'text', showWhen: 'button1_show' },
-            { key: 'button2_show', label: 'Afficher le 2e bouton', type: 'toggle' },
-            { key: 'button2_label', label: 'Bouton 2 - Texte', type: 'text', showWhen: 'button2_show' },
-            { key: 'button2_url', label: 'Bouton 2 - URL', type: 'text', showWhen: 'button2_show' },
+            { key: 'button1_show', label: 'Show button 1', type: 'toggle' },
+            { key: 'button1_label', label: 'Button 1 - Text', type: 'text', showWhen: 'button1_show' },
+            { key: 'button1_url', label: 'Button 1 - URL', type: 'text', showWhen: 'button1_show' },
+            { key: 'button2_show', label: 'Show button 2', type: 'toggle' },
+            { key: 'button2_label', label: 'Button 2 - Text', type: 'text', showWhen: 'button2_show' },
+            { key: 'button2_url', label: 'Button 2 - URL', type: 'text', showWhen: 'button2_show' },
           ]}
           renderItem={(event) => (
             <motion.div

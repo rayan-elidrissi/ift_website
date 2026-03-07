@@ -55,6 +55,9 @@ export const CMS_KEY_TO_SLUG: Record<string, string> = {
   'research-core-themes-label': 'page-research',
   'research-themes': 'page-research',
   'research-publications': 'page-research',
+  'research-all-publications-title': 'page-research',
+  'research-all-publications-desc': 'page-research',
+  'research-filter-categories': 'page-research',
 
   // Education page
   'education-title': 'page-education',
