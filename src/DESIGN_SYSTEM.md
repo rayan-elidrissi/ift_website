@@ -79,9 +79,3 @@
   - Awards: `aspect-square`
 - **Hover Effect**: `group-hover:scale-105 transition-transform duration-700`
 - **Overlay**: `bg-neutral-900/0 group-hover:bg-neutral-900/10 transition-colors duration-300`
-
-## Background Grid
-- **Pattern**: Linear grid 40px x 40px
-- **Color**: `#e5e5e5`
-- **Opacity**: `opacity-10`
-- **Style**: `linear-gradient(to right, #e5e5e5 1px, transparent 1px), linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)`

@@ -484,14 +484,6 @@ export const Events = () => {
 
   return (
     <section className="bg-white min-h-screen text-neutral-900 pt-40 pb-24 font-sans relative overflow-x-hidden">
-      
-      {/* Background Grid */}
-      <div className="fixed inset-0 z-0 pointer-events-none flex justify-between px-6 md:px-12 xl:px-20 max-w-[1920px] mx-auto opacity-20">
-         <div className="w-px h-full bg-neutral-200"></div>
-         <div className="w-px h-full bg-neutral-200 hidden md:block"></div>
-         <div className="w-px h-full bg-neutral-200 hidden lg:block"></div>
-         <div className="w-px h-full bg-neutral-200"></div>
-      </div>
 
       <div className="max-w-[1920px] mx-auto px-6 md:px-12 xl:px-20 relative z-10 overflow-x-hidden">
         

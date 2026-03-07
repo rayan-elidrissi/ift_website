@@ -98,20 +98,11 @@ export const Collaborate = () => {
 
   return (
     <div className="bg-white min-h-screen text-neutral-900 font-sans selection:bg-teal-200 selection:text-black pb-24 overflow-x-hidden">
-      {/* Background Grid */}
-      <div
-        className="fixed inset-0 z-0 opacity-10 pointer-events-none"
-        style={{
-          backgroundImage:
-            'linear-gradient(to right, #e5e5e5 1px, transparent 1px), linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      ></div>
 
       {/* COLLABORATION TYPES HERO SECTION */}
       <section className="max-w-[1920px] mx-auto min-h-screen flex flex-col lg:flex-row relative z-10">
         {/* LEFT COLUMN: List */}
-        <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-32 lg:pt-32 flex flex-col justify-center bg-white/95 backdrop-blur-sm border-r border-neutral-200">
+        <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-32 lg:pt-32 flex flex-col justify-center bg-white/95 backdrop-blur-sm">
           <div className="mb-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

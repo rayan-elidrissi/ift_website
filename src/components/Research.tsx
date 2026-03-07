@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { FileText, Share2, Filter, ArrowUpRight, Download, Calendar, X, PenTool, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
+import { FileText, Share2, Filter, ArrowUpRight, Download, Calendar, X, Edit2, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { EditableCollection } from './cms/EditableCollection';
 import { EditableContent } from './cms/EditableContent';
 import { CardButtons } from './CardButtons';
@@ -286,10 +286,34 @@ export const Research = () => {
   const { getContent, updateContent, isEditing, canEditKey } = useCMS();
   const allPublications = getContent('research-publications', defaultPublications);
   const filterCategories = getContent('research-filter-categories', defaultFilterCategories) as typeof defaultFilterCategories;
-  
+  const themesFromCMS = getContent('research-themes', researchThemes) as typeof researchThemes;
+  const researchThemesList = useMemo(() => {
+    const raw = Array.isArray(themesFromCMS) && themesFromCMS.length > 0 ? themesFromCMS : researchThemes;
+    const defaults = researchThemes;
+    return raw.map((t: any, i: number) => {
+      const def = defaults[i] || {};
+      const tags = Array.isArray(t.tags) ? t.tags
+        : typeof t.tags === 'string' ? t.tags.split(',').map((s: string) => s.trim()).filter(Boolean)
+        : (def.tags || []);
+      return {
+        ...def,
+        ...t,
+        id: t.id || def.id || String(i + 1).padStart(2, '0'),
+        tags: tags.length > 0 ? tags : (def.tags || []),
+      };
+    });
+  }, [themesFromCMS]);
+
   const [selectedYear, setSelectedYear] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState(filterCategories[0]?.label ?? 'All');
-  const [activeTheme, setActiveTheme] = useState(researchThemes[0]);
+  const [activeTheme, setActiveTheme] = useState(researchThemesList[0]);
+
+  // Sync activeTheme when researchThemesList changes (e.g. CMS load)
+  useEffect(() => {
+    if (researchThemesList.length > 0 && (!activeTheme || !researchThemesList.some((t: any) => t.id === activeTheme.id))) {
+      setActiveTheme(researchThemesList[0]);
+    }
+  }, [researchThemesList]);
   const [viewingPaper, setViewingPaper] = useState<typeof allPublications[0] | null>(null);
   const [isPaperAbstractExpanded, setIsPaperAbstractExpanded] = useState(false);
   const [hasPaperAbstractOverflow, setHasPaperAbstractOverflow] = useState(false);
@@ -441,6 +465,7 @@ export const Research = () => {
             <EditableCollection
               id="research-themes"
               defaultData={researchThemes}
+              overrideItems={researchThemesList}
               containerClassName="space-y-0 min-h-[300px]"
               schema={[
                 { key: 'title', label: 'Theme Title', type: 'text' },
@@ -532,10 +557,6 @@ export const Research = () => {
                 </motion.div>
               </AnimatePresence>
            </div>
-           
-           <div className="absolute bottom-8 right-8 font-mono text-[100px] leading-none text-white/20 font-bold z-0 mix-blend-overlay">
-              {activeTheme.id}
-           </div>
 
         </div>
         
@@ -567,7 +588,7 @@ export const Research = () => {
                       className="[&_p]:m-0"
                     />
                   </h2>
-                  <p className="text-neutral-500 font-sans mb-8">
+                  <div className="text-neutral-500 font-sans mb-8">
                     <EditableContent
                       id="research-all-publications-desc"
                       defaultContent="Chronological archive of all published research."
@@ -575,7 +596,7 @@ export const Research = () => {
                       multiline={false}
                       className="[&_p]:m-0"
                     />
-                  </p>
+                  </div>
 
                   {/* Year Filter */}
                   <div className="flex items-center gap-6 text-sm font-mono uppercase tracking-widest overflow-x-auto pb-2 scrollbar-hide">
@@ -607,11 +628,11 @@ export const Research = () => {
                     {canEditCategories && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setShowCategoriesModal(true); }}
-                        className="absolute -top-2 -right-2 bg-teal-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-lg hover:bg-teal-700"
+                        className="absolute -top-3 -right-3 bg-teal-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-lg hover:bg-teal-700"
                         title="Edit categories"
                         aria-label="Edit filter categories"
                       >
-                        <PenTool className="w-3.5 h-3.5" />
+                        <Edit2 className="w-4 h-4" />
                       </button>
                     )}
                     {filterCategories.map((cat: { id?: string; label: string; keywords: string }) => (

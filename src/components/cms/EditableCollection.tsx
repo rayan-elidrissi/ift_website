@@ -156,6 +156,8 @@ interface EditableCollectionProps<T> {
   getItemStyle?: (item: T, index: number) => React.CSSProperties;
   /** When using displayItems (filtered view), show Add button if true. Default: false. */
   allowAddWhenFiltered?: boolean;
+  /** When CMS returns empty/invalid data, use this instead. Enables fallback to defaults. */
+  overrideItems?: T[];
 }
 
 export const EditableCollection = <T extends { id?: string }>({ 
@@ -169,10 +171,12 @@ export const EditableCollection = <T extends { id?: string }>({
   getItemStyle,
   allowAddWhenFiltered = false,
   displayItems,
+  overrideItems,
 }: EditableCollectionProps<T> & { displayItems?: T[] }) => {
   const { isEditing, getContent, updateContent, canEditKey } = useCMS();
   const editable = isEditing && canEditKey(id);
-  const items = getContent(id, defaultData) as T[];
+  const rawItems = getContent(id, defaultData) as T[];
+  const items = overrideItems !== undefined ? overrideItems : rawItems;
   
   const [editingItem, setEditingItem] = useState<T | null>(null);
   const [isAdding, setIsAdding] = useState(false);

@@ -160,13 +160,17 @@ export const EditableContent = ({
     );
   }
 
+  // Use span as root when enableProse is false to allow valid nesting inside <p> (div cannot be descendant of p)
+  const Root = enableProse ? 'div' : 'span';
+  const Wrapper = enableProse ? 'div' : 'span';
+
   return (
-    <div className={className}>
-      <div className={markdownClass}>
+    <Root className={className} style={enableProse ? undefined : { display: 'block' }}>
+      <Wrapper className={markdownClass} style={enableProse ? undefined : { display: 'block' }}>
         <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
           {content}
         </ReactMarkdown>
-      </div>
-    </div>
+      </Wrapper>
+    </Root>
   );
 };
