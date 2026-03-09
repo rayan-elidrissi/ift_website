@@ -63,7 +63,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   };
 
   const renderGeometricOverlay = () => (
-    <div className="absolute inset-0 bg-black/30 hover:bg-black/50 transition-colors duration-300 p-6 flex flex-col justify-between z-10">
+    <div className="absolute inset-0 bg-black/30 hover:bg-black/50 transition-colors duration-300 p-4 sm:p-6 flex flex-col justify-between z-10">
       {/* Corner Borders */}
       <div className="absolute top-4 left-4 w-4 h-4 border-l border-t border-white/50"></div>
       <div className="absolute top-4 right-4 w-4 h-4 border-r border-t border-white/50"></div>
@@ -83,11 +83,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
       <div>
          {(subtitle || year || date) && (
-           <span className={`${accentColor} font-mono text-xs uppercase tracking-widest mb-2 block`}>
+           <span className={`${accentColor} font-mono text-[10px] sm:text-xs uppercase tracking-widest mb-2 block`}>
              {subtitle || year || date}
            </span>
          )}
-         <h3 className="text-white text-xl font-light leading-tight font-serif">{title}</h3>
+         <h3 className="text-white text-base sm:text-lg md:text-xl font-light leading-tight font-serif">{title}</h3>
       </div>
     </div>
   );
@@ -121,7 +121,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       transition={{ delay: index * 0.1 }}
       whileHover={variant === 'geometric' ? { y: -20, rotate: index % 2 === 0 ? 1 : -1 } : variant === 'minimal' ? { y: -8 } : {}}
       onClick={onClick}
-      className={`relative ${aspectClasses[aspectRatio]} group cursor-pointer ${className}`}
+      className={`relative ${aspectClasses[aspectRatio]} group cursor-pointer touch-pan-y ${className}`}
     >
       <div className={`absolute inset-0 ${
         variant === 'bordered' 
@@ -137,13 +137,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             loop
             muted
             playsInline
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
           />
         ) : (
           <img 
             src={image} 
             alt={title} 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none select-none"
           />
         )}
         

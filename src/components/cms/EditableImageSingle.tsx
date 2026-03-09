@@ -55,8 +55,8 @@ export const EditableImageSingle = ({ id, defaultImage, alt = '', className = ''
           className="w-full h-full object-cover scale-110 hover:scale-100 transition-transform duration-[1.5s]"
         />
         
-        {/* Upload overlay */}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+        {/* Upload overlay - always visible on mobile (no hover), hover on desktop */}
+        <div className="absolute inset-0 bg-black/60 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
           <button
             onClick={() => fileInputRef.current?.click()}
             className="bg-teal-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-teal-700 transition-colors shadow-xl font-medium"
@@ -75,8 +75,8 @@ export const EditableImageSingle = ({ id, defaultImage, alt = '', className = ''
           </button>
         </div>
 
-        {/* Edit indicator badge */}
-        <div className="absolute top-3 right-3 bg-teal-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+        {/* Edit indicator badge - always visible on mobile */}
+        <div className="absolute top-3 right-3 bg-teal-600 text-white p-2 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-lg">
           <Edit2 className="w-4 h-4" />
         </div>
 

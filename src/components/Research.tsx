@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { FileText, Share2, Filter, ArrowUpRight, Download, Calendar, X, Edit2, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
-import { EditableCollection } from './cms/EditableCollection';
+import { EditableCollection, EditModal } from './cms/EditableCollection';
 import { EditableContent } from './cms/EditableContent';
 import { CardButtons } from './CardButtons';
 import { CMSModal } from './cms/CMSModal';
@@ -322,6 +322,42 @@ export const Research = () => {
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
 
   const canEditCategories = isEditing && canEditKey('research-filter-categories');
+  const canEditPublications = isEditing && canEditKey('research-publications');
+  const [editingPaperInModal, setEditingPaperInModal] = useState(false);
+
+  const researchPublicationSchema = [
+    { key: 'title', label: 'Title', type: 'text' },
+    { key: 'authors', label: 'Authors', type: 'text' },
+    { key: 'year', label: 'Year', type: 'text' },
+    { key: 'journal', label: 'Journal/Conference', type: 'text' },
+    { key: 'abstract', label: 'Abstract', type: 'textarea' },
+    { key: 'media', label: 'Media', type: 'image' },
+    { key: 'tags', label: 'Tags (comma separated array)', type: 'text' },
+    { key: 'featured', label: 'Featured', type: 'toggle' },
+    { key: 'button1_show', label: 'Show button 1', type: 'toggle' },
+    { key: 'button1_label', label: 'Button 1 - Text', type: 'text', showWhen: 'button1_show' },
+    { key: 'button1_url', label: 'Button 1 - URL', type: 'text', showWhen: 'button1_show' },
+    { key: 'button2_show', label: 'Show button 2', type: 'toggle' },
+    { key: 'button2_label', label: 'Button 2 - Text', type: 'text', showWhen: 'button2_show' },
+    { key: 'button2_url', label: 'Button 2 - URL', type: 'text', showWhen: 'button2_show' },
+  ];
+
+  const handleSavePaperEdit = (updated: any) => {
+    if (!viewingPaper) return;
+    const pubs = Array.isArray(allPublications) ? [...allPublications] : [];
+    const idx = pubs.findIndex((p: any) => (p.id && p.id === viewingPaper.id) || p === viewingPaper);
+    if (idx === -1) return;
+    const tagsVal = updated.tags;
+    const item = {
+      ...viewingPaper,
+      ...updated,
+      tags: typeof tagsVal === 'string' ? tagsVal.split(',').map((s: string) => s.trim()).filter(Boolean) : tagsVal,
+    };
+    pubs[idx] = item;
+    updateContent('research-publications', pubs);
+    setViewingPaper(item);
+    setEditingPaperInModal(false);
+  };
 
   // Reset selected category if it was removed from the list
   useEffect(() => {
@@ -415,13 +451,13 @@ export const Research = () => {
       <section className="max-w-[1920px] mx-auto min-h-screen flex flex-col lg:flex-row relative z-10">
         
         {/* LEFT COLUMN: List */}
-        <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-32 lg:pt-32 flex flex-col justify-center bg-white/95 backdrop-blur-sm border-r border-neutral-200">
+        <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-16 md:pt-20 lg:pt-24 flex flex-col justify-center bg-white/95 backdrop-blur-sm border-r border-neutral-200">
           
           <div className="mb-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl md:text-7xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
+              className="text-4xl md:text-6xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
               role="heading"
               aria-level={1}
             >
@@ -473,7 +509,7 @@ export const Research = () => {
                 { key: 'image', label: 'Image', type: 'image' },
                 { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
               ]}
-              renderItem={(theme: any) => (
+              renderItem={(theme: any, index: number) => (
                 <motion.div
                   layout
                   initial={{ opacity: 0, x: -20 }}
@@ -486,7 +522,7 @@ export const Research = () => {
                   <div className="flex items-baseline justify-between relative z-10 px-4">
                     <div className="flex items-baseline gap-8">
                        <span className={`font-mono text-xs transition-colors duration-300 ${activeTheme.id === theme.id ? 'text-teal-600' : 'text-neutral-400'}`}>
-                          {theme.id}
+                          {String(index + 1).padStart(2, '0')}
                        </span>
                        <h3 className="text-2xl md:text-3xl font-light group-hover:translate-x-4 transition-transform duration-500 ease-out text-neutral-900">
                          {theme.title}
@@ -628,7 +664,7 @@ export const Research = () => {
                     {canEditCategories && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setShowCategoriesModal(true); }}
-                        className="absolute -top-3 -right-3 bg-teal-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-lg hover:bg-teal-700"
+                        className="absolute -top-3 -right-3 bg-teal-600 text-white p-1 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10 shadow-lg hover:bg-teal-700"
                         title="Edit categories"
                         aria-label="Edit filter categories"
                       >
@@ -662,22 +698,7 @@ export const Research = () => {
                       defaultData={defaultPublications}
                       displayItems={filteredPublications}
                       allowAddWhenFiltered
-                      schema={[
-                        { key: 'title', label: 'Title', type: 'text' },
-                        { key: 'authors', label: 'Authors', type: 'text' },
-                        { key: 'year', label: 'Year', type: 'text' },
-                        { key: 'journal', label: 'Journal/Conference', type: 'text' },
-                        { key: 'abstract', label: 'Abstract', type: 'textarea' },
-                        { key: 'media', label: 'Media', type: 'image' },
-                        { key: 'tags', label: 'Tags (comma separated array)', type: 'text' },
-                        { key: 'featured', label: 'Featured', type: 'toggle' },
-                        { key: 'button1_show', label: 'Show button 1', type: 'toggle' },
-                        { key: 'button1_label', label: 'Button 1 - Text', type: 'text', showWhen: 'button1_show' },
-                        { key: 'button1_url', label: 'Button 1 - URL', type: 'text', showWhen: 'button1_show' },
-                        { key: 'button2_show', label: 'Show button 2', type: 'toggle' },
-                        { key: 'button2_label', label: 'Button 2 - Text', type: 'text', showWhen: 'button2_show' },
-                        { key: 'button2_url', label: 'Button 2 - URL', type: 'text', showWhen: 'button2_show' },
-                      ]}
+                      schema={researchPublicationSchema}
                       containerClassName="contents"
                       renderItem={(pub: any, index: number, isEditing: boolean, openEditModal) => (
                          <motion.div 
@@ -694,7 +715,7 @@ export const Research = () => {
                                setViewingPaper(pub);
                              }
                            }}
-                           className="break-inside-avoid mb-8 group bg-white border border-neutral-200 hover:border-teal-500 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col shadow-sm hover:shadow-2xl relative"
+                           className="break-inside-avoid mb-8 group bg-white border border-neutral-200 hover:border-teal-500 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col shadow-sm hover:shadow-2xl relative touch-pan-y"
                          >
                             {/* Decorative corner */}
                             <div className="absolute top-0 right-0 w-8 h-8 bg-neutral-100 -mr-4 -mt-4 rotate-45 transform group-hover:bg-teal-500 transition-colors z-20"></div>
@@ -705,13 +726,15 @@ export const Research = () => {
                                  const src = pub.media || pub.video || pub.image;
                                  const isVideo = typeof src === 'string' && (src.startsWith('data:video/') || /\.(mp4|webm|ogg)(\?|$)/i.test(src));
                                  return isVideo ? (
-                                   <video src={src} autoPlay loop muted playsInline className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                   <video src={src} autoPlay loop muted playsInline className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none" />
                                  ) : (
-                                   <img src={src} alt={pub.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                   <img src={src} alt={pub.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none select-none" />
                                  );
                                })()}
-                               <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-neutral-900 border border-neutral-200">
-                                  {pub.year}
+                               <div className="absolute top-3 left-3 flex items-center gap-2">
+                                 <span className="bg-white/90 backdrop-blur px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-neutral-900 border border-neutral-200">
+                                    {pub.year}
+                                 </span>
                                </div>
                             </div>
                             
@@ -786,12 +809,23 @@ export const Research = () => {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
             >
-              <button 
-                onClick={() => setViewingPaper(null)}
-                className="absolute top-4 right-4 z-20 p-2 bg-white/50 hover:bg-white rounded-full transition-colors"
-              >
-                <X className="w-6 h-6 text-neutral-900" />
-              </button>
+              <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                {canEditPublications && (
+                  <button 
+                    onClick={() => setEditingPaperInModal(true)}
+                    className="p-2 bg-teal-100 hover:bg-teal-200 rounded-full transition-colors text-teal-700"
+                    title="Edit publication"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                )}
+                <button 
+                  onClick={() => { setViewingPaper(null); setEditingPaperInModal(false); }}
+                  className="p-2 bg-white/50 hover:bg-white rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-neutral-900" />
+                </button>
+              </div>
 
               {/* Media Section - Left Side (Landscape/Rectangular) */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
@@ -882,6 +916,15 @@ export const Research = () => {
           </div>
         )}
       </AnimatePresence>
+
+      <EditModal
+        isOpen={editingPaperInModal}
+        onClose={() => setEditingPaperInModal(false)}
+        onSave={handleSavePaperEdit}
+        data={viewingPaper || {}}
+        schema={researchPublicationSchema}
+        title="Edit Publication"
+      />
 
       {/* Categories Edit Modal */}
       <CategoriesEditModal

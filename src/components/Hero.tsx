@@ -32,8 +32,9 @@ export const Hero = () => {
           />
         </div>
         
-        {/* Gradient Overlay for Text Readability (light so video colors show) */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+        {/* Darkened overlay for better text contrast */}
+        <div className="absolute inset-0 bg-black/25" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
         {canEditHero && (
           <>
@@ -77,7 +78,7 @@ export const Hero = () => {
               id="hero-title"
               defaultContent="Experiments in Building Futures"
               enableProse={false}
-              className="text-4xl md:text-6xl lg:text-[4rem] font-sans font-bold text-white leading-[1.1] tracking-tight [&_p]:m-0"
+              className="text-5xl md:text-7xl lg:text-[5rem] xl:text-[6rem] font-sans font-bold text-white leading-[1.1] tracking-tight [&_p]:m-0"
             />
             <EditableContent 
               id="hero-blurb"

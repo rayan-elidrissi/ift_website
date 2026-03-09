@@ -6,7 +6,7 @@ import { EditableVideo } from './EditableVideo';
 import { EditableImage } from './EditableImage';
 import { CMSModal } from './CMSModal';
 
-interface FieldSchema {
+export interface FieldSchema {
   key: string;
   label: string;
   type: 'text' | 'image' | 'video' | 'textarea' | 'select' | 'toggle';
@@ -24,7 +24,7 @@ interface EditModalProps {
   title: string;
 }
 
-const EditModal = ({ isOpen, onClose, onSave, data, schema, title }: EditModalProps) => {
+export const EditModal = ({ isOpen, onClose, onSave, data, schema, title }: EditModalProps) => {
   const [formData, setFormData] = useState(data || {});
 
   useEffect(() => {
@@ -236,7 +236,7 @@ export const EditableCollection = <T extends { id?: string }>({
             {renderItem(item, index, editable, () => setEditingItem(item))}
             
             {editable && (
-              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <div className="absolute top-2 right-2 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
                 <button
                   onClick={(e) => { e.stopPropagation(); handleMoveItem(item, 'up'); }}
                   className="bg-neutral-800 text-white p-1.5 rounded-full hover:bg-neutral-900 shadow-lg"

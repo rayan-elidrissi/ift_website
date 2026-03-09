@@ -15,6 +15,8 @@ import {
   X,
   ExternalLink,
   Users,
+  Edit2,
+  Save,
 } from "lucide-react";
 import { EditableContent } from "./cms/EditableContent";
 import { EditableCollection } from "./cms/EditableCollection";
@@ -127,11 +129,14 @@ export const defaultStudentProjects = [
 ];
 
 export const Education = () => {
-  const { isEditing, getContent } = useCMS();
+  const { isEditing, getContent, updateContent } = useCMS();
   const allPrograms = getContent('edu-programs', educationPrograms) as typeof educationPrograms;
+  const allProjects = getContent('edu-student-projects', defaultStudentProjects) as typeof defaultStudentProjects;
   const [activeProgram, setActiveProgram] = useState(allPrograms[0] || educationPrograms[0]);
   const [isHoveringList, setIsHoveringList] = useState(false);
   const [viewingProject, setViewingProject] = useState<typeof defaultStudentProjects[0] | null>(null);
+  const [editingProjectInModal, setEditingProjectInModal] = useState(false);
+  const [editProjectForm, setEditProjectForm] = useState<Record<string, unknown>>({});
   const [isProjectDescriptionExpanded, setIsProjectDescriptionExpanded] = useState(false);
   const [hasProjectDescriptionOverflow, setHasProjectDescriptionOverflow] = useState(false);
   const projectDescriptionRef = useRef<HTMLDivElement | null>(null);
@@ -156,6 +161,34 @@ export const Education = () => {
   }, [viewingProject]);
 
   React.useEffect(() => {
+    if (editingProjectInModal && viewingProject) {
+      setEditProjectForm({
+        ...viewingProject,
+        tags: Array.isArray(viewingProject.tags) ? viewingProject.tags.join(", ") : (viewingProject.tags || ""),
+        team: Array.isArray(viewingProject.team) ? viewingProject.team.join(", ") : (viewingProject.team || ""),
+      });
+    } else {
+      setEditingProjectInModal(false);
+    }
+  }, [editingProjectInModal, viewingProject]);
+
+  const handleSaveProjectEdit = () => {
+    if (!viewingProject) return;
+    const tagsVal = editProjectForm.tags;
+    const teamVal = editProjectForm.team;
+    const updated = {
+      ...viewingProject,
+      ...editProjectForm,
+      tags: typeof tagsVal === "string" ? tagsVal.split(",").map((s: string) => s.trim()).filter(Boolean) : tagsVal,
+      team: typeof teamVal === "string" ? teamVal.split(",").map((s: string) => s.trim()).filter(Boolean) : teamVal,
+    };
+    const newProjects = allProjects.map((p) => (p.id === viewingProject.id ? updated : p));
+    updateContent("edu-student-projects", newProjects);
+    setViewingProject(updated);
+    setEditingProjectInModal(false);
+  };
+
+  React.useEffect(() => {
     if (!viewingProject || isProjectDescriptionExpanded) {
       setHasProjectDescriptionOverflow(false);
       return;
@@ -177,7 +210,7 @@ export const Education = () => {
   }, [viewingProject, isProjectDescriptionExpanded]);
 
   return (
-    <div className="bg-white min-h-screen text-neutral-900 font-sans selection:bg-teal-200 selection:text-black pb-24 overflow-x-hidden">
+    <div className="bg-white min-h-screen text-neutral-900 font-sans selection:bg-teal-200 selection:text-black pb-8 overflow-x-hidden">
       {/* Background Grid */}
       <div
         className="fixed inset-0 z-0 opacity-10 pointer-events-none"
@@ -191,12 +224,12 @@ export const Education = () => {
       {/* FEATURED PROGRAMS HERO SECTION */}
       <section className="max-w-[1920px] mx-auto min-h-screen flex flex-col lg:flex-row relative z-10">
         {/* LEFT COLUMN: List */}
-        <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-32 lg:pt-32 flex flex-col justify-center bg-white/95 backdrop-blur-sm border-r border-neutral-200">
+        <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-16 md:pt-20 lg:pt-24 flex flex-col justify-center bg-white/95 backdrop-blur-sm border-r border-neutral-200">
           <div className="mb-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl md:text-7xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
+              className="text-4xl md:text-6xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
               role="heading"
               aria-level={1}
             >
@@ -246,8 +279,9 @@ export const Education = () => {
                 { key: 'description', label: 'Description', type: 'textarea' },
                 { key: 'image', label: 'Image', type: 'image' },
                 { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
+                { key: 'link', label: 'Learn More URL (optional)', type: 'text' },
               ]}
-              renderItem={(program: any) => (
+              renderItem={(program: any, index: number) => (
                 <motion.div
                   layout
                   initial={{ opacity: 0, x: -20 }}
@@ -262,7 +296,7 @@ export const Education = () => {
                       <span
                         className={`font-mono text-xs transition-colors duration-300 ${activeProgram.id === program.id ? "text-teal-600" : "text-neutral-400"}`}
                       >
-                        {program.id}
+                        {String(index + 1).padStart(2, "0")}
                       </span>
                       <h3 className="text-2xl md:text-3xl font-light group-hover:translate-x-4 transition-transform duration-500 ease-out text-neutral-900">
                         {program.title}
@@ -313,16 +347,26 @@ export const Education = () => {
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="bg-white/90 backdrop-blur-md p-8 md:p-12 border border-white/50 shadow-2xl"
               >
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {(Array.isArray(activeProgram.tags) ? activeProgram.tags : (activeProgram.tags || '').split(',')).map((tag: string, i: number) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1 border border-teal-200 bg-teal-50 rounded-full text-[10px] uppercase tracking-wider text-teal-800"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                {(() => {
+                  const tagList = Array.isArray(activeProgram.tags)
+                    ? activeProgram.tags
+                    : (activeProgram.tags || "")
+                      .split(",")
+                      .map((t: string) => t.trim())
+                      .filter(Boolean);
+                  return tagList.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {tagList.map((tag: string, i: number) => (
+                        <span
+                          key={i}
+                          className="px-3 py-1 border border-teal-200 bg-teal-50 rounded-full text-[10px] uppercase tracking-wider text-teal-800"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
 
                 <h2 className="text-3xl md:text-4xl font-serif leading-tight mb-6 text-neutral-900">
                   {activeProgram.title}
@@ -332,15 +376,22 @@ export const Education = () => {
                   {activeProgram.description}
                 </p>
 
-                <button className="mt-4 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-teal-800 hover:text-teal-600 transition-colors">
-                  Learn More <ArrowRight className="w-4 h-4" />
-                </button>
+                {activeProgram.link && (
+                  <a
+                    href={activeProgram.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-teal-800 hover:text-teal-600 transition-colors"
+                  >
+                    Learn More <ArrowRight className="w-4 h-4" />
+                  </a>
+                )}
               </motion.div>
             </AnimatePresence>
           </div>
 
           <div className="absolute bottom-8 right-8 font-mono text-[100px] leading-none text-white/20 font-bold z-0 mix-blend-overlay">
-            {activeProgram.id}
+            {String((allPrograms.findIndex((p) => p.id === activeProgram.id) ?? 0) + 1).padStart(2, "0")}
           </div>
         </div>
 
@@ -352,7 +403,7 @@ export const Education = () => {
       </section>
 
       {/* CURSUS & METHODOLOGY */}
-      <section className="py-24 px-6 md:px-12 xl:px-20 max-w-[1920px] mx-auto z-10 relative border-t border-neutral-200">
+      <section className="pt-32 md:pt-40 pb-24 md:pb-32 px-6 md:px-12 xl:px-20 max-w-[1920px] mx-auto z-10 relative">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
           <div className="lg:col-span-5 relative">
             <div className="aspect-[4/5] bg-neutral-200 relative overflow-hidden">
@@ -384,7 +435,7 @@ export const Education = () => {
 
             <div className="space-y-12">
               <div className="flex gap-6">
-                <div className="w-12 h-12 flex-shrink-0 bg-teal-50 text-teal-700 flex items-center justify-center rounded-full">
+                <div className="relative w-12 h-12 flex-shrink-0 bg-teal-50 text-teal-700 flex items-center justify-center rounded-full">
                   <Rocket className="w-6 h-6" />
                 </div>
                 <div>
@@ -406,7 +457,7 @@ export const Education = () => {
               </div>
 
               <div className="flex gap-6">
-                <div className="w-12 h-12 flex-shrink-0 bg-teal-50 text-teal-700 flex items-center justify-center rounded-full">
+                <div className="relative w-12 h-12 flex-shrink-0 bg-teal-50 text-teal-700 flex items-center justify-center rounded-full">
                   <Microscope className="w-6 h-6" />
                 </div>
                 <div>
@@ -428,7 +479,7 @@ export const Education = () => {
               </div>
 
               <div className="flex gap-6">
-                <div className="w-12 h-12 flex-shrink-0 bg-teal-50 text-teal-700 flex items-center justify-center rounded-full">
+                <div className="relative w-12 h-12 flex-shrink-0 bg-teal-50 text-teal-700 flex items-center justify-center rounded-full">
                   <Globe className="w-6 h-6" />
                 </div>
                 <div>
@@ -453,8 +504,8 @@ export const Education = () => {
         </div>
       </section>
 
-      {/* STUDENT PROJECTS GALLERY */}
-      <section className="bg-neutral-900 text-white py-24 z-10 relative">
+      {/* STUDENT PROJECTS GALLERY — extra top spacing from Learning at IFT above, bottom for floating edit button */}
+      <section className="bg-neutral-900 text-white pt-32 md:pt-40 pb-24 md:pb-32 z-10 relative">
         <div className="px-6 md:px-12 xl:px-20 max-w-[1920px] mx-auto">
           <div className="flex justify-between items-end mb-16">
             <div>
@@ -486,8 +537,23 @@ export const Education = () => {
                 type: "text",
               },
               {
+                key: "description",
+                label: "Description",
+                type: "textarea",
+              },
+              {
+                key: "tags",
+                label: "Tags (comma separated)",
+                type: "text",
+              },
+              {
+                key: "team",
+                label: "Team (comma separated)",
+                type: "text",
+              },
+              {
                 key: "image",
-                label: "Image URL",
+                label: "Image",
                 type: "image",
               },
               {
@@ -495,11 +561,11 @@ export const Education = () => {
                 label: "Video (Optional)",
                 type: "video",
               },
-            {
-              key: "visible",
-              label: "Visibility (shown / hidden)",
-              type: "text",
-            },
+              {
+                key: "visible",
+                label: "Visibility (shown / hidden)",
+                type: "text",
+              },
             { key: "button1_show", label: "Show button 1", type: "toggle" },
             { key: "button1_label", label: "Button 1 - Text", type: "text", showWhen: "button1_show" },
             { key: "button1_url", label: "Button 1 - URL", type: "text", showWhen: "button1_show" },
@@ -514,7 +580,7 @@ export const Education = () => {
             }
             return (
               <div 
-                className={`group relative aspect-[4/3] overflow-hidden cursor-pointer h-full ${
+                className={`group relative aspect-[4/3] overflow-hidden cursor-pointer h-full touch-pan-y ${
                   isVisible ? "bg-neutral-800" : "bg-neutral-900/50 opacity-60"
                 }`}
                 onClick={() => setViewingProject(project)}
@@ -526,13 +592,13 @@ export const Education = () => {
                     loop
                     muted
                     playsInline
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100 pointer-events-none"
                   />
                 ) : (
                   <img
                     src={project.image}
                     alt={project.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100 pointer-events-none select-none"
                   />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
@@ -560,26 +626,44 @@ export const Education = () => {
       <AnimatePresence>
         {viewingProject && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:p-8">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setViewingProject(null)}
+              onClick={() => {
+                setViewingProject(null);
+                setEditingProjectInModal(false);
+              }}
               className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
             />
             
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
               className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
             >
-              <button 
-                onClick={() => setViewingProject(null)}
-                className="absolute top-4 right-4 z-20 p-2 bg-white/50 hover:bg-white rounded-full transition-colors"
-              >
-                <X className="w-6 h-6 text-neutral-900" />
-              </button>
+              <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                {isEditing && !editingProjectInModal && (
+                  <button
+                    onClick={() => setEditingProjectInModal(true)}
+                    className="p-2 bg-teal-100 hover:bg-teal-200 rounded-full transition-colors text-teal-700"
+                    title="Edit project"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setViewingProject(null);
+                    setEditingProjectInModal(false);
+                  }}
+                  className="p-2 bg-white/50 hover:bg-white rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-neutral-900" />
+                </button>
+              </div>
 
               {/* Media Section - Left Side */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
@@ -606,76 +690,121 @@ export const Education = () => {
 
               {/* Content Section - Right Side */}
               <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
-                <div className="flex-1 min-h-0 overflow-y-auto pr-2">
-                  <div className="mb-6">
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {(Array.isArray(viewingProject.tags) ? viewingProject.tags : []).map((tag: string) => (
-                        <span key={tag} className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 mb-4 leading-tight">
-                      {viewingProject.title}
-                    </h2>
-
-                    <div className="flex flex-col gap-2 mb-8 border-l-2 border-teal-500 pl-4 py-1">
-                      <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
-                        <Users className="w-4 h-4 text-teal-600" />
-                        <span className="font-bold text-neutral-900">{viewingProject.student}</span>
-                      </div>
-                    </div>
-
-                    <div className="prose prose-neutral prose-sm max-w-none mb-8">
-                      <div className="relative">
-                        <div
-                          ref={projectDescriptionRef}
-                          className={`text-neutral-600 leading-relaxed text-base transition-all ${
-                            isProjectDescriptionExpanded ? "max-h-64 overflow-y-auto pr-2" : "max-h-28 overflow-hidden"
-                          }`}
-                        >
-                          <p>{viewingProject.description?.trim() || "No description available."}</p>
-                        </div>
-
-                        {!isProjectDescriptionExpanded && hasProjectDescriptionOverflow && (
-                          <>
-                            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white via-white/95 to-transparent" />
-                            <button
-                              type="button"
-                              onClick={() => setIsProjectDescriptionExpanded(true)}
-                              className="absolute bottom-1 right-1 font-mono text-sm text-teal-700 hover:text-teal-500 transition-colors"
-                              aria-label="Show full description"
-                            >
-                              ...
-                            </button>
-                          </>
+                {editingProjectInModal ? (
+                  <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
+                    {["title", "student", "description", "tags", "team"].map((key) => (
+                      <div key={key}>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1">
+                          {key === "tags" ? "Tags (comma separated)" : key === "team" ? "Team (comma separated)" : key.charAt(0).toUpperCase() + key.slice(1)}
+                        </label>
+                        {key === "description" ? (
+                          <textarea
+                            value={(editProjectForm[key] as string) || ""}
+                            onChange={(e) => setEditProjectForm((f) => ({ ...f, [key]: e.target.value }))}
+                            className="w-full p-3 border border-neutral-300 rounded-lg text-sm min-h-[120px]"
+                            placeholder={key === "description" ? "Project description..." : ""}
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            value={(editProjectForm[key] as string) || ""}
+                            onChange={(e) => setEditProjectForm((f) => ({ ...f, [key]: e.target.value }))}
+                            className="w-full p-3 border border-neutral-300 rounded-lg text-sm"
+                            placeholder={key === "tags" ? "Biomedical, Robotics, AI" : key === "team" ? "Name 1, Name 2" : ""}
+                          />
                         )}
                       </div>
-
-                      {Array.isArray(viewingProject.team) && viewingProject.team.length > 0 && (
-                        <>
-                          <h3 className="text-lg font-bold text-neutral-900 mt-6 mb-3">Project Team</h3>
-                          <div className="flex flex-wrap gap-2">
-                            {viewingProject.team.map((member: string, i: number) => (
-                              <span key={i} className="px-3 py-1 bg-neutral-100 text-neutral-700 text-sm rounded-full">
-                                {member}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      )}
+                    ))}
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        onClick={handleSaveProjectEdit}
+                        className="flex items-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
+                      >
+                        <Save className="w-4 h-4" />
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={() => setEditingProjectInModal(false)}
+                        className="px-6 py-3 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+                      <div className="mb-6">
+                        <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 mb-4 leading-tight">
+                          {viewingProject.title}
+                        </h2>
 
-                <CardButtons
-                  item={viewingProject}
-                  defaultButtons={[
-                    { label: "View Full Project", primary: true },
-                    { label: "Share", primary: false },
-                  ]}
-                />
+                        <div className="flex flex-col gap-2 mb-8 border-l-2 border-teal-500 pl-4 py-1">
+                          <div className="flex items-center gap-2 text-sm text-neutral-600 font-mono">
+                            <Users className="w-4 h-4 text-teal-600" />
+                            <span className="font-bold text-neutral-900">{viewingProject.student}</span>
+                          </div>
+                        </div>
+
+                        <div className="prose prose-neutral prose-sm max-w-none mb-8">
+                          <div className="relative">
+                            <div
+                              ref={projectDescriptionRef}
+                              className={`text-neutral-600 leading-relaxed text-base transition-all ${
+                                isProjectDescriptionExpanded ? "max-h-64 overflow-y-auto pr-2" : "max-h-28 overflow-hidden"
+                              }`}
+                            >
+                              <p>{viewingProject.description?.trim() || "No description available."}</p>
+                            </div>
+
+                            {!isProjectDescriptionExpanded && hasProjectDescriptionOverflow && (
+                              <>
+                                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white via-white/95 to-transparent" />
+                                <button
+                                  type="button"
+                                  onClick={() => setIsProjectDescriptionExpanded(true)}
+                                  className="absolute bottom-1 right-1 font-mono text-sm text-teal-700 hover:text-teal-500 transition-colors"
+                                  aria-label="Show full description"
+                                >
+                                  ...
+                                </button>
+                              </>
+                            )}
+                          </div>
+
+                          {(() => {
+                            const teamList = Array.isArray(viewingProject.team)
+                              ? viewingProject.team
+                              : (typeof viewingProject.team === "string" ? viewingProject.team : "")
+                                  .split(",")
+                                  .map((s: string) => s.trim())
+                                  .filter(Boolean);
+                            return teamList.length > 0 ? (
+                              <>
+                                <h3 className="text-lg font-bold text-neutral-900 mt-6 mb-3">Project Team</h3>
+                                <div className="flex flex-wrap gap-2">
+                                  {teamList.map((member: string, i: number) => (
+                                    <span key={i} className="px-3 py-1 bg-neutral-100 text-neutral-700 text-sm rounded-full">
+                                      {member}
+                                    </span>
+                                  ))}
+                                </div>
+                              </>
+                            ) : null;
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+
+                    <CardButtons
+                      item={viewingProject}
+                      defaultButtons={[
+                        { label: "View Full Project", primary: true },
+                        { label: "Share", primary: false },
+                      ]}
+                    />
+                  </>
+                )}
               </div>
             </motion.div>
           </div>

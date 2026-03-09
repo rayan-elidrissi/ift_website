@@ -118,7 +118,7 @@ export const FeaturedProjects = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.05 }}
               onClick={() => setViewingProject(project)}
-              className="break-inside-avoid mb-8 group bg-white border border-neutral-200 hover:border-teal-500 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col shadow-sm hover:shadow-2xl relative"
+              className="break-inside-avoid mb-8 group bg-white border border-neutral-200 hover:border-teal-500 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col shadow-sm hover:shadow-2xl relative touch-pan-y"
             >
               {/* Decorative corner */}
               <div className="absolute top-0 right-0 w-8 h-8 bg-neutral-100 -mr-4 -mt-4 rotate-45 transform group-hover:bg-teal-500 transition-colors z-20"></div>
@@ -132,13 +132,13 @@ export const FeaturedProjects = () => {
                     loop
                     muted
                     playsInline
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
                   />
                 ) : (
                   <img
                     src={project.image}
                     alt={project.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none select-none"
                   />
                 )}
                 <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-neutral-900 border border-neutral-200">
@@ -150,13 +150,15 @@ export const FeaturedProjects = () => {
               <div className="p-6 flex flex-col flex-grow relative">
                 <div className="absolute top-0 left-6 w-px h-6 bg-neutral-200 group-hover:h-full group-hover:bg-teal-500/20 transition-all duration-500"></div>
 
-                <div className="flex flex-wrap gap-2 mb-4 pl-4">
-                  {(Array.isArray(project.tags) ? project.tags : (project.tags || '').split(',')).slice(0, 3).map((tag: string) => (
-                    <span key={tag} className="text-[10px] text-teal-600 font-mono uppercase tracking-wider bg-teal-50 px-1.5 py-0.5 rounded-sm">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                {project.sourceType !== 'student' && (
+                  <div className="flex flex-wrap gap-2 mb-4 pl-4">
+                    {(Array.isArray(project.tags) ? project.tags : (project.tags || '').split(',')).slice(0, 3).map((tag: string) => (
+                      <span key={tag} className="text-[10px] text-teal-600 font-mono uppercase tracking-wider bg-teal-50 px-1.5 py-0.5 rounded-sm">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 <h3 className="text-xl font-serif text-neutral-900 mb-3 pl-4 leading-tight group-hover:text-teal-700 transition-colors">
                   {project.title}
@@ -232,16 +234,18 @@ export const FeaturedProjects = () => {
             {/* Content Section - Right Side */}
             <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
               <div className="mb-6">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {(Array.isArray(viewingProject.tags) ? viewingProject.tags : (viewingProject.tags || '').split(',')).map((tag: string) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                {viewingProject.sourceType !== 'student' && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {(Array.isArray(viewingProject.tags) ? viewingProject.tags : (viewingProject.tags || '').split(',')).map((tag: string) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 mb-4 leading-tight">
                   {viewingProject.title}

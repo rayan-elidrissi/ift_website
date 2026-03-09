@@ -97,17 +97,17 @@ export const Collaborate = () => {
   const [isHoveringList, setIsHoveringList] = useState(false);
 
   return (
-    <div className="bg-white min-h-screen text-neutral-900 font-sans selection:bg-teal-200 selection:text-black pb-24 overflow-x-hidden">
+    <div className="bg-white min-h-screen text-neutral-900 font-sans selection:bg-teal-200 selection:text-black pb-8 overflow-x-hidden">
 
       {/* COLLABORATION TYPES HERO SECTION */}
       <section className="max-w-[1920px] mx-auto min-h-screen flex flex-col lg:flex-row relative z-10">
         {/* LEFT COLUMN: List */}
-        <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-32 lg:pt-32 flex flex-col justify-center bg-white/95 backdrop-blur-sm">
+        <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-16 md:pt-20 lg:pt-24 flex flex-col justify-center bg-white/95 backdrop-blur-sm">
           <div className="mb-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl md:text-7xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
+              className="text-4xl md:text-6xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
               role="heading"
               aria-level={1}
             >
@@ -162,7 +162,7 @@ export const Collaborate = () => {
                 { key: 'cta_url', label: 'CTA URL (/page or https://...)', type: 'text' },
                 { key: 'image', label: 'Image', type: 'image' },
               ]}
-              renderItem={(type: any, _index: number, _isEditing: boolean) => {
+              renderItem={(type: any, index: number, _isEditing: boolean) => {
                 const icon = iconMap[type.id] || <Sparkles className="w-5 h-5" />;
                 const typeWithIcon = {
                   ...type,
@@ -192,7 +192,7 @@ export const Collaborate = () => {
                             activeType.id === type.id ? 'text-teal-600' : 'text-neutral-400'
                           }`}
                         >
-                          {type.id}
+                          {String(index + 1).padStart(2, '0')}
                         </span>
                         <div className="flex items-center gap-4">
                           <span
@@ -309,21 +309,17 @@ export const Collaborate = () => {
                 </motion.div>
               </div>
 
-              {/* Decorative Element */}
-              
-              <div className="absolute bottom-8 right-8 font-mono text-[100px] leading-none text-white/20 font-bold z-0 mix-blend-overlay">
-                {activeType.id}
-              </div>
             </motion.div>
           </AnimatePresence>
         </div>
       </section>
 
       {/* PARTNERS SECTION (Team-style) */}
-      <section className="py-24 bg-neutral-950 text-white relative font-serif overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-px bg-neutral-900" />
+      <section className="pt-16 pb-24 md:pt-20 md:pb-32 bg-neutral-950 text-white relative font-serif overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 w-full h-px bg-neutral-800" aria-hidden="true" />
 
         <div className="max-w-7xl mx-auto px-6">
+          {/* Simple Header - matches Team */}
           <div className="mb-12 text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -331,12 +327,28 @@ export const Collaborate = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <h3 className="text-3xl md:text-5xl font-light mb-4">
-                The <span className="text-teal-500 italic">Partners</span>
+              <h3 className="text-4xl md:text-6xl font-bold tracking-tighter leading-[0.9] uppercase mb-4">
+                <EditableContent
+                  id="collaborate-partners-prefix"
+                  defaultContent="The"
+                  enableProse={false}
+                  className="[&_p]:inline [&_p]:m-0"
+                />{' '}
+                <span className="text-teal-500 italic">
+                  <EditableContent
+                    id="collaborate-partners-highlight"
+                    defaultContent="Partners"
+                    enableProse={false}
+                    className="[&_p]:inline [&_p]:m-0"
+                  />
+                </span>
               </h3>
-              <p className="font-sans text-neutral-400 text-sm tracking-wide uppercase">
-                Institutions, Labs, and Industry Leaders
-              </p>
+              <EditableContent
+                id="collaborate-partners-subtitle"
+                defaultContent="Institutions, Labs, and Industry Leaders"
+                enableProse={false}
+                className="font-sans text-neutral-400 text-sm tracking-wide uppercase [&_p]:m-0"
+              />
             </motion.div>
           </div>
 
@@ -350,28 +362,32 @@ export const Collaborate = () => {
               { key: 'logo', label: 'Logo Image', type: 'image' },
             ]}
             renderItem={(partner: any, index: number) => (
-              <a
+              <motion.a
                 href={isEditing ? undefined : (partner.href || '#')}
                 onClick={isEditing ? (e) => e.preventDefault() : undefined}
                 target={partner.href && !isEditing ? '_blank' : undefined}
                 rel={partner.href && !isEditing ? 'noopener noreferrer' : undefined}
                 aria-label={partner.name}
-                className="min-w-0 flex flex-col"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: (index % 6) * 0.05 }}
+                className="group relative cursor-pointer block min-w-0"
               >
-                <div className="relative aspect-square mb-2 overflow-hidden bg-neutral-900 rounded-sm border border-neutral-800">
+                <div className="relative aspect-square mb-3 overflow-hidden bg-neutral-900 rounded-sm">
                   <img
                     src={partner.logo || LOGO_PLACEHOLDER}
                     alt={partner.name}
                     loading="lazy"
-                    className="w-full h-full object-contain p-4 transition-all duration-500 ease-out hover:scale-105"
+                    className="w-full h-full object-contain p-4 transition-all duration-700 ease-out transform group-hover:scale-110 grayscale group-hover:grayscale-0"
                   />
                   {!partner.logo && (
-                    <div className="absolute bottom-2 left-2 text-[10px] uppercase tracking-wide font-sans text-neutral-400 bg-black/50 px-1.5 py-0.5 rounded">
-                      Upload logo
+                    <div className="absolute inset-0 flex items-center justify-center p-4">
+                      <span className="text-[10px] uppercase tracking-wide font-sans text-neutral-500 text-center">Upload logo</span>
                     </div>
                   )}
                 </div>
-              </a>
+              </motion.a>
             )}
           />
         </div>

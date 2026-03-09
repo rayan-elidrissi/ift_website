@@ -87,7 +87,7 @@ export const EditableContent = ({
                 {content}
               </ReactMarkdown>
             </div>
-            <div className="absolute -top-3 -right-3 bg-teal-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute -top-3 -right-3 bg-teal-600 text-white p-1 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
               <Edit2 className="w-3 h-3" />
             </div>
           </div>

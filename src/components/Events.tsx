@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, Calendar, MapPin, Users, X, ExternalLink } from 'lucide-react';
+import { ChevronRight, Calendar, MapPin, Users, X, ExternalLink, Edit2 } from 'lucide-react';
 import Slider from 'react-slick';
 import { ProjectCard } from './ProjectCard';
 import { CardButtons } from './CardButtons';
 import { EditableContent } from './cms/EditableContent';
-import { EditableCollection } from './cms/EditableCollection';
+import { EditableCollection, EditModal } from './cms/EditableCollection';
 import { useCMS } from '../context/CMSContext';
 
 const talks = [
@@ -288,15 +288,108 @@ const CustomArrow = ({ onClick, direction }: { onClick?: () => void; direction: 
   </button>
 );
 
+const talksSchema = [
+  { key: 'title', label: 'Title', type: 'text' },
+  { key: 'date', label: 'Date', type: 'text' },
+  { key: 'time', label: 'Time', type: 'text' },
+  { key: 'location', label: 'Location', type: 'text' },
+  { key: 'speaker', label: 'Speaker', type: 'text' },
+  { key: 'role', label: 'Speaker Role', type: 'text' },
+  { key: 'organization', label: 'Organization', type: 'text' },
+  { key: 'image', label: 'Image', type: 'image' },
+  { key: 'description', label: 'Description', type: 'textarea' },
+  { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
+  { key: 'button1_show', label: 'Show button 1', type: 'toggle' },
+  { key: 'button1_label', label: 'Button 1 - Text', type: 'text', showWhen: 'button1_show' },
+  { key: 'button1_url', label: 'Button 1 - URL', type: 'text', showWhen: 'button1_show' },
+  { key: 'button2_show', label: 'Show button 2', type: 'toggle' },
+  { key: 'button2_label', label: 'Button 2 - Text', type: 'text', showWhen: 'button2_show' },
+  { key: 'button2_url', label: 'Button 2 - URL', type: 'text', showWhen: 'button2_show' },
+];
+const festivalsSchema = [
+  { key: 'theme', label: 'Theme', type: 'text' },
+  { key: 'year', label: 'Year', type: 'text' },
+  { key: 'date', label: 'Date', type: 'text' },
+  { key: 'location', label: 'Location', type: 'text' },
+  { key: 'image', label: 'Image', type: 'image' },
+  { key: 'description', label: 'Description', type: 'textarea' },
+  { key: 'highlights', label: 'Highlights (comma separated)', type: 'text' },
+  { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
+  { key: 'button1_show', label: 'Show button 1', type: 'toggle' },
+  { key: 'button1_label', label: 'Button 1 - Text', type: 'text', showWhen: 'button1_show' },
+  { key: 'button1_url', label: 'Button 1 - URL', type: 'text', showWhen: 'button1_show' },
+  { key: 'button2_show', label: 'Show button 2', type: 'toggle' },
+  { key: 'button2_label', label: 'Button 2 - Text', type: 'text', showWhen: 'button2_show' },
+  { key: 'button2_url', label: 'Button 2 - URL', type: 'text', showWhen: 'button2_show' },
+];
+const miscSchema = [
+  { key: 'title', label: 'Title', type: 'text' },
+  { key: 'category', label: 'Category', type: 'select', options: ['Award', 'Press'] },
+  { key: 'date', label: 'Date', type: 'text' },
+  { key: 'image', label: 'Image', type: 'image' },
+  { key: 'description', label: 'Description', type: 'textarea' },
+  { key: 'award', label: 'Award (if applicable)', type: 'text' },
+  { key: 'team', label: 'Team (comma separated)', type: 'text' },
+  { key: 'publication', label: 'Publication (if press)', type: 'text' },
+  { key: 'author', label: 'Author (if press)', type: 'text' },
+  { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
+  { key: 'button1_show', label: 'Show button 1', type: 'toggle' },
+  { key: 'button1_label', label: 'Button 1 - Text', type: 'text', showWhen: 'button1_show' },
+  { key: 'button1_url', label: 'Button 1 - URL', type: 'text', showWhen: 'button1_show' },
+  { key: 'button2_show', label: 'Show button 2', type: 'toggle' },
+  { key: 'button2_label', label: 'Button 2 - Text', type: 'text', showWhen: 'button2_show' },
+  { key: 'button2_url', label: 'Button 2 - URL', type: 'text', showWhen: 'button2_show' },
+];
+
 export const Events = () => {
-  const { getContent, isEditing } = useCMS();
+  const { getContent, updateContent, isEditing, canEditKey } = useCMS();
   const allTalks = getContent('events-talks', talks) as typeof talks;
   const allFestivals = getContent('events-festivals', festivals) as typeof festivals;
   const allMisc = getContent('events-misc', misc) as typeof misc;
   const [viewingTalk, setViewingTalk] = React.useState<typeof talks[0] | null>(null);
   const [viewingFestival, setViewingFestival] = React.useState<typeof festivals[0] | null>(null);
   const [viewingMisc, setViewingMisc] = React.useState<typeof misc[0] | null>(null);
+  const [editingTalkInModal, setEditingTalkInModal] = React.useState(false);
+  const [editingFestivalInModal, setEditingFestivalInModal] = React.useState(false);
+  const [editingMiscInModal, setEditingMiscInModal] = React.useState(false);
+  const canEditTalks = isEditing && canEditKey('events-talks');
+  const canEditFestivals = isEditing && canEditKey('events-festivals');
+  const canEditMisc = isEditing && canEditKey('events-misc');
   const talksSliderRef = React.useRef<Slider | null>(null);
+
+  const findItemIndex = (list: any[], item: any) =>
+    list.findIndex((p: any) => (p.id && item.id && p.id === item.id) || p === item);
+
+  const handleSaveTalkEdit = (updated: any) => {
+    if (!viewingTalk) return;
+    const list = [...(Array.isArray(allTalks) ? allTalks : [])];
+    const idx = findItemIndex(list, viewingTalk);
+    if (idx === -1) return;
+    list[idx] = { ...viewingTalk, ...updated };
+    updateContent('events-talks', list);
+    setViewingTalk(list[idx]);
+    setEditingTalkInModal(false);
+  };
+  const handleSaveFestivalEdit = (updated: any) => {
+    if (!viewingFestival) return;
+    const list = [...(Array.isArray(allFestivals) ? allFestivals : [])];
+    const idx = findItemIndex(list, viewingFestival);
+    if (idx === -1) return;
+    list[idx] = { ...viewingFestival, ...updated };
+    updateContent('events-festivals', list);
+    setViewingFestival(list[idx]);
+    setEditingFestivalInModal(false);
+  };
+  const handleSaveMiscEdit = (updated: any) => {
+    if (!viewingMisc) return;
+    const list = [...(Array.isArray(allMisc) ? allMisc : [])];
+    const idx = findItemIndex(list, viewingMisc);
+    if (idx === -1) return;
+    list[idx] = { ...viewingMisc, ...updated };
+    updateContent('events-misc', list);
+    setViewingMisc(list[idx]);
+    setEditingMiscInModal(false);
+  };
   const festivalsSliderRef = React.useRef<Slider | null>(null);
   const miscSliderRef = React.useRef<Slider | null>(null);
   const talksLastWheelAtRef = React.useRef(0);
@@ -337,9 +430,9 @@ export const Events = () => {
     };
   }, [viewingTalk, viewingFestival, viewingMisc]);
 
-  // Carousel settings for each section
-  const talksSettings = {
-    dots: false,
+  // Carousel settings — mobile: full-width cards + dots; desktop: multi-column
+  const sliderSettings = {
+    dots: true,
     infinite: false,
     speed: 600,
     slidesToShow: 3,
@@ -353,6 +446,7 @@ export const Events = () => {
         settings: {
           slidesToShow: 3,
           slidesToScroll: 1,
+          dots: false,
         }
       },
       {
@@ -360,13 +454,15 @@ export const Events = () => {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          dots: false,
         }
       },
       {
         breakpoint: 1024,
         settings: {
-          slidesToShow: 1.1,
+          slidesToShow: 1.5,
           slidesToScroll: 1,
+          dots: false,
         }
       },
       {
@@ -374,116 +470,28 @@ export const Events = () => {
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
+          dots: true,
+          arrows: false,
         }
       },
       {
         breakpoint: 640,
         settings: {
-          slidesToShow: 0.85,
+          slidesToShow: 1,
           slidesToScroll: 1,
+          dots: true,
+          arrows: false,
         }
       }
     ]
   };
 
-  const festivalsSettings = {
-    dots: false,
-    infinite: false,
-    speed: 600,
-    slidesToShow: 3,
-    slidesToScroll: 1,
-    autoplay: false,
-    prevArrow: <CustomArrow direction="prev" />,
-    nextArrow: <CustomArrow direction="next" />,
-    responsive: [
-      {
-        breakpoint: 1536,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 1,
-        }
-      },
-      {
-        breakpoint: 1280,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-        }
-      },
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 1.1,
-          slidesToScroll: 1,
-        }
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-        }
-      },
-      {
-        breakpoint: 640,
-        settings: {
-          slidesToShow: 0.85,
-          slidesToScroll: 1,
-        }
-      }
-    ]
-  };
-
-  const miscSettings = {
-    dots: false,
-    infinite: false,
-    speed: 600,
-    slidesToShow: 3,
-    slidesToScroll: 1,
-    autoplay: false,
-    prevArrow: <CustomArrow direction="prev" />,
-    nextArrow: <CustomArrow direction="next" />,
-    responsive: [
-      {
-        breakpoint: 1536,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 1,
-        }
-      },
-      {
-        breakpoint: 1280,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-        }
-      },
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 1.1,
-          slidesToScroll: 1,
-        }
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-        }
-      },
-      {
-        breakpoint: 640,
-        settings: {
-          slidesToShow: 0.85,
-          slidesToScroll: 1,
-        }
-      }
-    ]
-  };
+  const talksSettings = sliderSettings;
+  const festivalsSettings = sliderSettings;
+  const miscSettings = sliderSettings;
 
   return (
-    <section className="bg-white min-h-screen text-neutral-900 pt-40 pb-24 font-sans relative overflow-x-hidden">
+    <section className="bg-white min-h-screen text-neutral-900 pt-16 md:pt-20 lg:pt-24 pb-24 font-sans relative overflow-x-hidden">
 
       <div className="max-w-[1920px] mx-auto px-6 md:px-12 xl:px-20 relative z-10 overflow-x-hidden">
         
@@ -496,7 +504,7 @@ export const Events = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-7xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
+            className="text-4xl md:text-6xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
             role="heading"
             aria-level={1}
           >
@@ -535,24 +543,7 @@ export const Events = () => {
                id="events-talks"
                defaultData={talks}
                containerClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-               schema={[
-                 { key: 'title', label: 'Title', type: 'text' },
-                 { key: 'date', label: 'Date', type: 'text' },
-                 { key: 'time', label: 'Time', type: 'text' },
-                 { key: 'location', label: 'Location', type: 'text' },
-                 { key: 'speaker', label: 'Speaker', type: 'text' },
-                 { key: 'role', label: 'Speaker Role', type: 'text' },
-                 { key: 'organization', label: 'Organization', type: 'text' },
-                 { key: 'image', label: 'Image', type: 'image' },
-                 { key: 'description', label: 'Description', type: 'textarea' },
-                 { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
-                 { key: 'button1_show', label: 'Show button 1', type: 'toggle' },
-                 { key: 'button1_label', label: 'Button 1 - Text', type: 'text', showWhen: 'button1_show' },
-                 { key: 'button1_url', label: 'Button 1 - URL', type: 'text', showWhen: 'button1_show' },
-                 { key: 'button2_show', label: 'Show button 2', type: 'toggle' },
-                 { key: 'button2_label', label: 'Button 2 - Text', type: 'text', showWhen: 'button2_show' },
-                 { key: 'button2_url', label: 'Button 2 - URL', type: 'text', showWhen: 'button2_show' },
-               ]}
+               schema={talksSchema}
                renderItem={(talk: any, index: number) => (
                  <ProjectCard
                    title={talk.title || 'Untitled'}
@@ -566,23 +557,41 @@ export const Events = () => {
                )}
              />
            ) : (
-             <div className="relative" onWheel={createTrackpadWheelHandler(talksSliderRef, talksLastWheelAtRef)}>
-               <Slider ref={talksSliderRef} {...talksSettings}>
+             <>
+               {/* Mobile: vertical stack (matches edit mode) */}
+               <div className="grid grid-cols-1 gap-4 md:hidden">
                  {allTalks.map((talk, index) => (
-                   <div key={talk.id} className="px-3">
-                     <ProjectCard
-                       title={talk.title || 'Untitled'}
-                       subtitle={firstFilled(talk.date, talk.time, talk.location, talk.speaker)}
-                       image={talk.image || PLACEHOLDER_IMAGE}
-                       aspectRatio="square"
-                       variant="geometric"
-                       index={index}
-                       onClick={() => setViewingTalk(talk)}
-                     />
-                   </div>
+                   <ProjectCard
+                     key={talk.id}
+                     title={talk.title || 'Untitled'}
+                     subtitle={firstFilled(talk.date, talk.time, talk.location, talk.speaker)}
+                     image={talk.image || PLACEHOLDER_IMAGE}
+                     aspectRatio="square"
+                     variant="geometric"
+                     index={index}
+                     onClick={() => setViewingTalk(talk)}
+                   />
                  ))}
-               </Slider>
-             </div>
+               </div>
+               {/* Desktop: carousel */}
+               <div className="hidden md:block relative" onWheel={createTrackpadWheelHandler(talksSliderRef, talksLastWheelAtRef)}>
+                 <Slider ref={talksSliderRef} {...talksSettings}>
+                   {allTalks.map((talk, index) => (
+                     <div key={talk.id} className="px-3">
+                       <ProjectCard
+                         title={talk.title || 'Untitled'}
+                         subtitle={firstFilled(talk.date, talk.time, talk.location, talk.speaker)}
+                         image={talk.image || PLACEHOLDER_IMAGE}
+                         aspectRatio="square"
+                         variant="geometric"
+                         index={index}
+                         onClick={() => setViewingTalk(talk)}
+                       />
+                     </div>
+                   ))}
+                 </Slider>
+               </div>
+             </>
            )}
         </div>
 
@@ -603,22 +612,7 @@ export const Events = () => {
                id="events-festivals"
                defaultData={festivals}
                containerClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-               schema={[
-                 { key: 'theme', label: 'Theme', type: 'text' },
-                 { key: 'year', label: 'Year', type: 'text' },
-                 { key: 'date', label: 'Date', type: 'text' },
-                 { key: 'location', label: 'Location', type: 'text' },
-                 { key: 'image', label: 'Image', type: 'image' },
-                 { key: 'description', label: 'Description', type: 'textarea' },
-                 { key: 'highlights', label: 'Highlights (comma separated)', type: 'text' },
-                 { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
-                 { key: 'button1_show', label: 'Show button 1', type: 'toggle' },
-                 { key: 'button1_label', label: 'Button 1 - Text', type: 'text', showWhen: 'button1_show' },
-                 { key: 'button1_url', label: 'Button 1 - URL', type: 'text', showWhen: 'button1_show' },
-                 { key: 'button2_show', label: 'Show button 2', type: 'toggle' },
-                 { key: 'button2_label', label: 'Button 2 - Text', type: 'text', showWhen: 'button2_show' },
-                 { key: 'button2_url', label: 'Button 2 - URL', type: 'text', showWhen: 'button2_show' },
-               ]}
+               schema={festivalsSchema}
                renderItem={(fest: any, index: number) => (
                  <ProjectCard
                    title={fest.theme || 'Untitled'}
@@ -632,23 +626,41 @@ export const Events = () => {
                )}
              />
            ) : (
-             <div className="relative" onWheel={createTrackpadWheelHandler(festivalsSliderRef, festivalsLastWheelAtRef)}>
-               <Slider ref={festivalsSliderRef} {...festivalsSettings}>
+             <>
+               {/* Mobile: vertical stack (matches edit mode) */}
+               <div className="grid grid-cols-1 gap-4 md:hidden">
                  {allFestivals.map((fest, index) => (
-                   <div key={fest.id ?? fest.year} className="px-3">
-                     <ProjectCard
-                       title={fest.theme || 'Untitled'}
-                       subtitle={firstFilled(fest.year, fest.date, fest.location)}
-                       image={fest.image || PLACEHOLDER_IMAGE}
-                       aspectRatio="square"
-                       variant="geometric"
-                       index={index}
-                       onClick={() => setViewingFestival(fest)}
-                     />
-                   </div>
+                   <ProjectCard
+                     key={fest.id ?? fest.year}
+                     title={fest.theme || 'Untitled'}
+                     subtitle={firstFilled(fest.year, fest.date, fest.location)}
+                     image={fest.image || PLACEHOLDER_IMAGE}
+                     aspectRatio="square"
+                     variant="geometric"
+                     index={index}
+                     onClick={() => setViewingFestival(fest)}
+                   />
                  ))}
-               </Slider>
-             </div>
+               </div>
+               {/* Desktop: carousel */}
+               <div className="hidden md:block relative" onWheel={createTrackpadWheelHandler(festivalsSliderRef, festivalsLastWheelAtRef)}>
+                 <Slider ref={festivalsSliderRef} {...festivalsSettings}>
+                   {allFestivals.map((fest, index) => (
+                     <div key={fest.id ?? fest.year} className="px-3">
+                       <ProjectCard
+                         title={fest.theme || 'Untitled'}
+                         subtitle={firstFilled(fest.year, fest.date, fest.location)}
+                         image={fest.image || PLACEHOLDER_IMAGE}
+                         aspectRatio="square"
+                         variant="geometric"
+                         index={index}
+                         onClick={() => setViewingFestival(fest)}
+                       />
+                     </div>
+                   ))}
+                 </Slider>
+               </div>
+             </>
            )}
         </div>
 
@@ -669,24 +681,7 @@ export const Events = () => {
                id="events-misc"
                defaultData={misc}
                containerClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-               schema={[
-                 { key: 'title', label: 'Title', type: 'text' },
-                 { key: 'category', label: 'Category', type: 'select', options: ['Award', 'Press'] },
-                 { key: 'date', label: 'Date', type: 'text' },
-                 { key: 'image', label: 'Image', type: 'image' },
-                 { key: 'description', label: 'Description', type: 'textarea' },
-                 { key: 'award', label: 'Award (if applicable)', type: 'text' },
-                 { key: 'team', label: 'Team (comma separated)', type: 'text' },
-                 { key: 'publication', label: 'Publication (if press)', type: 'text' },
-                 { key: 'author', label: 'Author (if press)', type: 'text' },
-                 { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
-                 { key: 'button1_show', label: 'Show button 1', type: 'toggle' },
-                 { key: 'button1_label', label: 'Button 1 - Text', type: 'text', showWhen: 'button1_show' },
-                 { key: 'button1_url', label: 'Button 1 - URL', type: 'text', showWhen: 'button1_show' },
-                 { key: 'button2_show', label: 'Show button 2', type: 'toggle' },
-                 { key: 'button2_label', label: 'Button 2 - Text', type: 'text', showWhen: 'button2_show' },
-                 { key: 'button2_url', label: 'Button 2 - URL', type: 'text', showWhen: 'button2_show' },
-               ]}
+               schema={miscSchema}
                renderItem={(item: any, index: number) => (
                  <ProjectCard
                    title={item.title || 'Untitled'}
@@ -701,24 +696,43 @@ export const Events = () => {
                )}
              />
            ) : (
-             <div className="relative" onWheel={createTrackpadWheelHandler(miscSliderRef, miscLastWheelAtRef)}>
-               <Slider ref={miscSliderRef} {...miscSettings}>
+             <>
+               {/* Mobile: vertical stack (matches edit mode) */}
+               <div className="grid grid-cols-1 gap-4 md:hidden">
                  {allMisc.map((item, index) => (
-                   <div key={item.id} className="px-3">
-                     <ProjectCard
-                       title={item.title || 'Untitled'}
-                       subtitle={firstFilled(item.category, item.date)}
-                       image={item.image || PLACEHOLDER_IMAGE}
-                       aspectRatio="square"
-                       variant="geometric"
-                       accentColor="text-white"
-                       index={index}
-                       onClick={() => setViewingMisc(item)}
-                     />
-                   </div>
+                   <ProjectCard
+                     key={item.id}
+                     title={item.title || 'Untitled'}
+                     subtitle={firstFilled(item.category, item.date)}
+                     image={item.image || PLACEHOLDER_IMAGE}
+                     aspectRatio="square"
+                     variant="geometric"
+                     accentColor="text-white"
+                     index={index}
+                     onClick={() => setViewingMisc(item)}
+                   />
                  ))}
-               </Slider>
-             </div>
+               </div>
+               {/* Desktop: carousel */}
+               <div className="hidden md:block relative" onWheel={createTrackpadWheelHandler(miscSliderRef, miscLastWheelAtRef)}>
+                 <Slider ref={miscSliderRef} {...miscSettings}>
+                   {allMisc.map((item, index) => (
+                     <div key={item.id} className="px-3">
+                       <ProjectCard
+                         title={item.title || 'Untitled'}
+                         subtitle={firstFilled(item.category, item.date)}
+                         image={item.image || PLACEHOLDER_IMAGE}
+                         aspectRatio="square"
+                         variant="geometric"
+                         accentColor="text-white"
+                         index={index}
+                         onClick={() => setViewingMisc(item)}
+                       />
+                     </div>
+                   ))}
+                 </Slider>
+               </div>
+             </>
            )}
         </div>
       </div>
@@ -741,12 +755,16 @@ export const Events = () => {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col md:flex-row"
             >
-              <button 
-                onClick={() => setViewingTalk(null)}
-                className="absolute top-4 right-4 z-20 p-2 bg-white/50 hover:bg-white rounded-full transition-colors"
-              >
-                <X className="w-6 h-6 text-neutral-900" />
-              </button>
+              <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                {canEditTalks && (
+                  <button onClick={() => setEditingTalkInModal(true)} className="p-2 bg-teal-100 hover:bg-teal-200 rounded-full transition-colors text-teal-700" title="Edit event">
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                )}
+                <button onClick={() => { setViewingTalk(null); setEditingTalkInModal(false); }} className="p-2 bg-white/50 hover:bg-white rounded-full transition-colors">
+                  <X className="w-6 h-6 text-neutral-900" />
+                </button>
+              </div>
 
               {/* Media Section - Left Side */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
@@ -849,12 +867,16 @@ export const Events = () => {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col md:flex-row"
             >
-              <button 
-                onClick={() => setViewingFestival(null)}
-                className="absolute top-4 right-4 z-20 p-2 bg-white/50 hover:bg-white rounded-full transition-colors"
-              >
-                <X className="w-6 h-6 text-neutral-900" />
-              </button>
+              <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                {canEditFestivals && (
+                  <button onClick={() => setEditingFestivalInModal(true)} className="p-2 bg-teal-100 hover:bg-teal-200 rounded-full transition-colors text-teal-700" title="Edit festival">
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                )}
+                <button onClick={() => { setViewingFestival(null); setEditingFestivalInModal(false); }} className="p-2 bg-white/50 hover:bg-white rounded-full transition-colors">
+                  <X className="w-6 h-6 text-neutral-900" />
+                </button>
+              </div>
 
               {/* Media Section - Left Side */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
@@ -955,12 +977,16 @@ export const Events = () => {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col md:flex-row"
             >
-              <button 
-                onClick={() => setViewingMisc(null)}
-                className="absolute top-4 right-4 z-20 p-2 bg-white/50 hover:bg-white rounded-full transition-colors"
-              >
-                <X className="w-6 h-6 text-neutral-900" />
-              </button>
+              <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                {canEditMisc && (
+                  <button onClick={() => setEditingMiscInModal(true)} className="p-2 bg-teal-100 hover:bg-teal-200 rounded-full transition-colors text-teal-700" title="Edit event">
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                )}
+                <button onClick={() => { setViewingMisc(null); setEditingMiscInModal(false); }} className="p-2 bg-white/50 hover:bg-white rounded-full transition-colors">
+                  <X className="w-6 h-6 text-neutral-900" />
+                </button>
+              </div>
 
               {/* Media Section - Left Side */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
@@ -1054,6 +1080,10 @@ export const Events = () => {
           </div>
         )}
       </AnimatePresence>
+
+      <EditModal isOpen={editingTalkInModal} onClose={() => setEditingTalkInModal(false)} onSave={handleSaveTalkEdit} data={viewingTalk || {}} schema={talksSchema} title="Edit Talk" />
+      <EditModal isOpen={editingFestivalInModal} onClose={() => setEditingFestivalInModal(false)} onSave={handleSaveFestivalEdit} data={viewingFestival || {}} schema={festivalsSchema} title="Edit Festival" />
+      <EditModal isOpen={editingMiscInModal} onClose={() => setEditingMiscInModal(false)} onSave={handleSaveMiscEdit} data={viewingMisc || {}} schema={miscSchema} title="Edit Event" />
     </section>
   );
 };

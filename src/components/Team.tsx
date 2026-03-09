@@ -125,9 +125,9 @@ export const Team = () => {
   }, [activeMember]);
 
   return (
-    <section className="py-24 bg-neutral-950 text-white relative font-serif overflow-hidden">
-      {/* Divider */}
-      <div className="absolute top-0 left-0 w-full h-px bg-neutral-900" />
+    <section className="pt-16 pb-24 md:pt-20 md:pb-24 bg-neutral-950 text-white relative font-serif overflow-hidden">
+      {/* Divider with breathing room above */}
+      <div className="absolute top-0 left-0 right-0 w-full h-px bg-neutral-800" aria-hidden="true" />
       
       <div className="max-w-7xl mx-auto px-6">
         
@@ -139,7 +139,7 @@ export const Team = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
              >
-                <h3 className="text-3xl md:text-5xl font-light mb-4">
+                <h3 className="text-4xl md:text-6xl font-bold tracking-tighter leading-[0.9] uppercase mb-4">
                   <EditableContent 
                     id="team-title-prefix"
                     defaultContent="The"

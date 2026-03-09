@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { LogIn, LogOut, Menu, X, LayoutDashboard, Lock } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
+import { LogIn, LogOut, Menu, X, LayoutDashboard, Lock, Twitter, Linkedin, Instagram, Github } from "lucide-react";
+import { useCMS } from "../context/CMSContext";
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
@@ -8,6 +10,13 @@ import { isGateConfigured } from "./PasswordGate";
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, signOut, isAdmin } = useAuth();
+  const { getContent } = useCMS();
+  const socialLinks = {
+    twitter: getContent("footer-social-twitter", "#"),
+    linkedin: getContent("footer-social-linkedin", "#"),
+    instagram: getContent("footer-social-instagram", "#"),
+    github: getContent("footer-social-github", "#"),
+  };
   const location = useLocation();
   const navigate = useNavigate();
   const isLoggedIn = !!user;
@@ -18,6 +27,21 @@ export const Navbar = () => {
     setIsMobileMenuOpen(false);
     navigate(gateConfigured ? '/' : '/login');
   };
+
+  // Body scroll lock when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+    } else {
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+    };
+  }, [isMobileMenuOpen]);
 
   const navLinks = [
     { name: "About", href: "/about" },
@@ -30,7 +54,7 @@ export const Navbar = () => {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500 bg-white/90 backdrop-blur-md py-4 border-b border-neutral-200"
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500 bg-white/90 backdrop-blur-md py-4"
     >
       <div className="w-full px-4">
         <div className="flex items-center">
@@ -145,69 +169,135 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-white z-[55] flex flex-col justify-center items-center"
-          >
-            <div className="space-y-8 text-center pointer-events-auto">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.href}
-                  className="block text-3xl font-serif text-neutral-400 hover:text-teal-600 transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              ))}
-              {isLoggedIn ? (
-                <>
-                  {isAdmin && (
-                    <Link
-                      to="/dashboard"
-                      className="flex items-center justify-center gap-3 text-3xl font-serif text-neutral-400 hover:text-teal-600 transition-colors py-4"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <LayoutDashboard className="w-8 h-8" />
-                      <span>Dashboard</span>
-                    </Link>
-                  )}
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center justify-center gap-3 w-full text-center text-3xl font-serif text-neutral-400 hover:text-teal-600 transition-colors py-4 cursor-pointer"
+      {/* Mobile Menu Overlay — light theme, logo same coords as main nav */}
+      {typeof document !== "undefined" &&
+        ReactDOM.createPortal(
+          <AnimatePresence>
+            {isMobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-full h-full min-h-screen bg-white flex flex-col overflow-auto"
+                style={{ zIndex: 9999, isolation: "isolate" }}
+                aria-modal="true"
+                aria-label="Navigation menu"
+                role="dialog"
+              >
+                {/* Header: same px-4 pt-4 as main nav so logo stays at same coordinates */}
+                <div className="flex items-center justify-between px-4 pt-4 pb-2 flex-shrink-0">
+                  <Link
+                    to="/"
+                    className="flex-shrink-0 flex items-center gap-2 cursor-pointer -translate-y-2"
+                    onClick={() => { setIsMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                   >
-                    {gateConfigured ? (
-                      <>
-                        <Lock className="w-8 h-8" />
-                        <span>Verrouiller</span>
-                      </>
-                    ) : (
-                      <>
-                        <LogOut className="w-8 h-8" />
-                        <span>Sign Out</span>
-                      </>
-                    )}
+                    <svg
+                      className="w-8 h-8 text-neutral-900 fill-current"
+                      viewBox="0 0 32 33"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M10.0811 8.4182L5.83462 0.190918H2.99992L9.67261 13.1182C10.5858 12.4441 10.9873 10.1747 10.0811 8.4182Z" fill="#007F7F" />
+                      <path d="M15.718 2.23543L13.1494 7.23357C13.1494 7.23357 10.7002 3.40679 11.9444 1.22143C12.9961 -0.412105 14.5318 0.34164 14.7541 0.518363C14.9764 0.694577 15.652 1.06534 15.718 2.23543Z" fill="#007F7F" />
+                      <path d="M4.56792 32.1182H0.919922V16.5902H4.56792V32.1182Z" />
+                      <path d="M18.2125 19.4222H12.3325V22.7822H17.9245V25.5662H12.3325V32.1182H8.68448V16.5902H18.2125V19.4222Z" />
+                      <path d="M31.774 19.4222H27.67V32.1182H23.998V19.4222H19.894V16.5902H31.774V19.4222Z" />
+                    </svg>
+                  </Link>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-3 -m-3 text-neutral-900 hover:text-teal-600 transition-colors touch-manipulation rounded-full"
+                    aria-label="Close menu"
+                    type="button"
+                  >
+                    <X className="w-6 h-6" />
                   </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => { setIsMobileMenuOpen(false); navigate('/login'); }}
-                  className="flex items-center justify-center gap-3 text-3xl font-serif text-neutral-400 hover:text-teal-600 transition-colors py-4 cursor-pointer w-full"
-                >
-                  <LogIn className="w-8 h-8" />
-                  <span>Log In</span>
-                </button>
-              )}
-            </div>
-          </motion.div>
+                </div>
+
+                {/* Main nav links — left-aligned, separators */}
+                <nav className="flex-1 flex flex-col min-h-0 px-4 py-6">
+                  <div className="flex-1 min-h-0">
+                    {navLinks.map((link) => (
+                      <Link
+                        key={link.name}
+                        to={link.href}
+                        className={`block py-4 text-neutral-900 font-sans text-lg border-b border-neutral-200 hover:text-teal-600 transition-colors ${
+                          location.pathname === link.href ? "text-teal-600" : ""
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {link.name}
+                      </Link>
+                    ))}
+                  </div>
+
+                  {/* Bottom section: auth + social — pushed to bottom */}
+                  <div className="flex-shrink-0 pt-8 mt-auto pb-6">
+                    {/* Auth actions */}
+                    <div className="pt-6 border-t border-neutral-200 flex flex-col gap-4">
+                      {isLoggedIn ? (
+                        <>
+                          {isAdmin && (
+                            <Link
+                              to="/dashboard"
+                              className="flex items-center gap-3 text-neutral-500 font-sans text-sm uppercase tracking-wider hover:text-teal-600 transition-colors py-2"
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              <LayoutDashboard className="w-5 h-5" />
+                              <span>Dashboard</span>
+                            </Link>
+                          )}
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center justify-start gap-3 text-neutral-500 font-sans text-sm uppercase tracking-wider hover:text-teal-600 transition-colors py-2 cursor-pointer w-full"
+                          >
+                            {gateConfigured ? (
+                              <>
+                                <Lock className="w-5 h-5" />
+                                <span>Verrouiller</span>
+                              </>
+                            ) : (
+                              <>
+                                <LogOut className="w-5 h-5" />
+                                <span>Sign Out</span>
+                              </>
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => { setIsMobileMenuOpen(false); navigate("/login"); }}
+                          className="flex items-center justify-start gap-3 text-neutral-500 font-sans text-sm uppercase tracking-wider hover:text-teal-600 transition-colors py-2 w-full"
+                        >
+                          <LogIn className="w-5 h-5" />
+                          <span>Log In</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Social media */}
+                    <div className="mt-6 pt-6 border-t border-neutral-200 flex gap-4">
+                      <a href={socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-teal-600 transition-colors" aria-label="Twitter">
+                        <Twitter className="w-5 h-5" />
+                      </a>
+                      <a href={socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-teal-600 transition-colors" aria-label="LinkedIn">
+                        <Linkedin className="w-5 h-5" />
+                      </a>
+                      <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-teal-600 transition-colors" aria-label="Instagram">
+                        <Instagram className="w-5 h-5" />
+                      </a>
+                      <a href={socialLinks.github} target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-teal-600 transition-colors" aria-label="GitHub">
+                        <Github className="w-5 h-5" />
+                      </a>
+                    </div>
+                  </div>
+                </nav>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </nav>
   );
 };

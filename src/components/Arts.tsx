@@ -1,20 +1,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import {
-  ArrowUpRight,
-  Calendar,
-  MapPin,
-  X,
-  Plus,
-  ArrowRight,
-  FileText,
-  Share2
-} from "lucide-react";
+import { X, Edit2 } from "lucide-react";
 import Masonry, {
   ResponsiveMasonry,
 } from "react-responsive-masonry";
 import { EditableContent } from './cms/EditableContent';
-import { EditableCollection } from './cms/EditableCollection';
+import { EditableCollection, EditModal } from './cms/EditableCollection';
 import { CardButtons } from './CardButtons';
 import { useCMS } from '../context/CMSContext';
 
@@ -105,17 +96,44 @@ export const defaultExhibitions = [
   },
 ];
 
+const exhibitionsSchema = [
+  { key: 'title', label: 'Title', type: 'text' },
+  { key: 'artist', label: 'Artist', type: 'text' },
+  { key: 'role', label: 'Role', type: 'text' },
+  { key: 'year', label: 'Year', type: 'text' },
+  { key: 'location', label: 'Location', type: 'text' },
+  { key: 'image', label: 'Image', type: 'image' },
+  { key: 'description', label: 'Description', type: 'textarea' },
+  { key: 'materials', label: 'Materials / Technologies', type: 'text' },
+  { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
+];
+
 export const Arts = () => {
-  const { getContent, isEditing } = useCMS();
+  const { getContent, updateContent, isEditing, canEditKey } = useCMS();
   const allExhibitions = getContent('arts-exhibitions', defaultExhibitions) as typeof defaultExhibitions;
 
   const [selectedWork, setSelectedWork] = useState<
     (typeof defaultExhibitions)[0] | null
   >(null);
-  const [activeHighlight, setActiveHighlight] = useState(defaultExhibitions[0]);
-  const [isHoveringList, setIsHoveringList] = useState(false);
+  const [editingWorkInModal, setEditingWorkInModal] = useState(false);
+  const canEditExhibitions = isEditing && canEditKey('arts-exhibitions');
 
-  const featuredWorks = allExhibitions.slice(0, 3);
+  const handleSaveWorkEdit = (updated: any) => {
+    if (!selectedWork) return;
+    const list = [...(Array.isArray(allExhibitions) ? allExhibitions : [])];
+    const idx = list.findIndex((p: any) => (p.id && selectedWork.id && p.id === selectedWork.id) || p === selectedWork);
+    if (idx === -1) return;
+    const tagsVal = updated.tags;
+    const item = {
+      ...selectedWork,
+      ...updated,
+      tags: typeof tagsVal === 'string' ? tagsVal.split(',').map((s: string) => s.trim()).filter(Boolean) : tagsVal,
+    };
+    list[idx] = item;
+    updateContent('arts-exhibitions', list);
+    setSelectedWork(item);
+    setEditingWorkInModal(false);
+  };
 
   return (
     <div className="min-h-screen bg-white text-neutral-900 font-sans selection:bg-teal-200 selection:text-black relative">
@@ -130,184 +148,50 @@ export const Arts = () => {
       {/* FEATURED ARTS HERO SECTION */}
       <section className="max-w-[1920px] mx-auto min-h-screen flex flex-col lg:flex-row relative z-10">
         
-        {/* LEFT COLUMN: List */}
-        <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-32 lg:pt-32 flex flex-col justify-center bg-white/95 backdrop-blur-sm border-r border-neutral-200">
+        {/* LEFT COLUMN: Title + Blurb */}
+        <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-16 md:pt-20 lg:pt-24 flex flex-col justify-center bg-white/95 backdrop-blur-sm border-r border-neutral-200">
           
-          <div className="mb-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-5xl md:text-7xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
-              role="heading"
-              aria-level={1}
-            >
-              <EditableContent
-                id="arts-title"
-                defaultContent="Arts"
-                enableProse={false}
-                className="[&_p]:m-0"
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-lg md:text-xl text-neutral-500 font-serif italic mb-12 max-w-lg leading-relaxed"
-            >
-              <EditableContent
-                id="arts-intro"
-                defaultContent="Curated exhibitions at the intersection of material reality and digital innovation. Exploring new aesthetics through code and sensors."
-                enableProse={false}
-                className="[&_p]:m-0"
-              />
-            </motion.div>
-            
-            <div className="font-mono text-sm uppercase tracking-widest text-neutral-500 mb-2 flex items-center gap-2" role="heading" aria-level={2}>
-              <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
-              <EditableContent
-                id="arts-featured-exhibitions-label"
-                defaultContent="Featured Exhibitions"
-                enableProse={false}
-                className="[&_p]:inline [&_p]:m-0"
-              />
-            </div>
-          </div>
-
-          <div 
-            onMouseEnter={() => setIsHoveringList(true)}
-            onMouseLeave={() => setIsHoveringList(false)}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-6xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
+            role="heading"
+            aria-level={1}
           >
-            <EditableCollection
-              id="arts-exhibitions"
-              defaultData={defaultExhibitions}
-              displayItems={featuredWorks}
-              containerClassName="space-y-0 min-h-[300px]"
-              schema={[
-                { key: 'title', label: 'Title', type: 'text' },
-                { key: 'artist', label: 'Artist', type: 'text' },
-                { key: 'year', label: 'Year', type: 'text' },
-                { key: 'location', label: 'Location', type: 'text' },
-                { key: 'image', label: 'Image', type: 'image' },
-                { key: 'description', label: 'Description', type: 'textarea' },
-                { key: 'materials', label: 'Materials / Technologies', type: 'text' },
-                { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
-                { key: 'button1_show', label: 'Show button 1', type: 'toggle' },
-                { key: 'button1_label', label: 'Button 1 - Text', type: 'text', showWhen: 'button1_show' },
-                { key: 'button1_url', label: 'Button 1 - URL', type: 'text', showWhen: 'button1_show' },
-                { key: 'button2_show', label: 'Show button 2', type: 'toggle' },
-                { key: 'button2_label', label: 'Button 2 - Text', type: 'text', showWhen: 'button2_show' },
-                { key: 'button2_url', label: 'Button 2 - URL', type: 'text', showWhen: 'button2_show' },
-              ]}
-              renderItem={(work, _index, _isEditing) => (
-                <AnimatePresence mode="popLayout">
-                  <motion.div
-                    layout
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                    onMouseEnter={() => setActiveHighlight(work)}
-                    className={`group relative py-8 border-t border-neutral-200 cursor-pointer transition-all duration-300 ${
-                      activeHighlight.id === work.id ? 'opacity-100' : 'opacity-40 hover:opacity-70'
-                    }`}
-                  >
-                    <div className="flex items-baseline justify-between relative z-10 px-4">
-                      <div className="flex items-baseline gap-8">
-                        <span
-                          className={`font-mono text-xs transition-colors duration-300 ${
-                            activeHighlight.id === work.id ? 'text-teal-600' : 'text-neutral-400'
-                          }`}
-                        >
-                          0{work.id}
-                        </span>
-                        <h3 className="text-2xl md:text-3xl font-light group-hover:translate-x-4 transition-transform duration-500 ease-out text-neutral-900">
-                          {work.title}
-                        </h3>
-                      </div>
-                    </div>
-
-                    {activeHighlight.id === work.id && (
-                      <motion.div
-                        layoutId="activeLine"
-                        className="absolute bottom-0 left-0 w-full h-[1px] bg-teal-600"
-                      />
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-              )}
+            <EditableContent
+              id="arts-title"
+              defaultContent="Arts"
+              enableProse={false}
+              className="[&_p]:m-0"
             />
-            <div className="border-t border-neutral-200" />
-          </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-lg md:text-xl text-neutral-600 font-sans leading-relaxed max-w-xl"
+          >
+            <EditableContent
+              id="arts-blurb"
+              defaultContent="Curated exhibitions at the intersection of material reality and digital innovation. Our Arts programme explores new aesthetics through code, sensors, and emerging technologies—from immersive projection mapping and spatial audio to kinetic sculpture and bio-art. We support artists and researchers who blur the boundaries between computation and craft, presenting work at venues including Ars Electronica, Centre Pompidou, SIGGRAPH, and the Venice Biennale."
+              enableProse={true}
+              className="[&_p]:mb-4 last:[&_p]:mb-0"
+            />
+          </motion.div>
 
         </div>
 
-        {/* RIGHT COLUMN: Preview (Sticky) */}
+        {/* RIGHT COLUMN: Hero Image (Sticky) */}
         <div className="lg:w-1/2 lg:h-screen lg:sticky lg:top-0 bg-neutral-100 relative overflow-hidden hidden lg:block">
-           
-           <AnimatePresence mode="wait">
-             <motion.div
-               key={activeHighlight.id}
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               exit={{ opacity: 0 }}
-               transition={{ duration: 0.5 }}
-               className="absolute inset-0 z-0"
-             >
-                <img 
-                  src={activeHighlight.image} 
-                  alt={activeHighlight.title}
-                  className="w-full h-full object-cover opacity-100 scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-20" />
-             </motion.div>
-           </AnimatePresence>
-
-           <div className="absolute inset-0 z-10 p-12 lg:p-20 flex flex-col justify-end">
-              <AnimatePresence mode="wait">
-                <motion.div
-                   key={activeHighlight.id}
-                   initial={{ opacity: 0, y: 20 }}
-                   animate={{ opacity: 1, y: 0 }}
-                   exit={{ opacity: 0, y: -20 }}
-                   transition={{ duration: 0.4, ease: "easeOut" }}
-                   className="bg-white/90 backdrop-blur-md p-8 md:p-12 border border-white/50 shadow-2xl"
-                >
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {(Array.isArray(activeHighlight.tags) ? activeHighlight.tags : (activeHighlight.tags || '').split(',')).map((tag: string, i: number) => (
-                      <span key={i} className="px-3 py-1 border border-teal-200 bg-teal-50 rounded-full text-[10px] uppercase tracking-wider text-teal-800">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <h2 className="text-3xl md:text-4xl font-serif leading-tight mb-6 text-neutral-900">
-                    {activeHighlight.title}
-                  </h2>
-
-                  <div className="flex flex-col gap-1 font-mono text-xs text-neutral-500 mb-6 border-l-2 border-teal-500 pl-4 py-1">
-                    <span className="text-neutral-900 font-bold">{activeHighlight.artist}</span>
-                    <span>{activeHighlight.location} / {activeHighlight.year}</span>
-                  </div>
-
-                  <p className="text-neutral-700 font-sans leading-relaxed text-sm md:text-base mb-4">
-                    {activeHighlight.description}
-                  </p>
-                  
-                  <button 
-                    onClick={() => setSelectedWork(activeHighlight)}
-                    className="mt-4 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-teal-800 hover:text-teal-600 transition-colors"
-                  >
-                    View Details <ArrowRight className="w-4 h-4" />
-                  </button>
-                </motion.div>
-              </AnimatePresence>
+           <div className="absolute inset-0 z-0">
+             <img 
+               src={allExhibitions[0]?.image ?? "https://images.unsplash.com/photo-1545987796-b199d6abb1b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"} 
+               alt="Arts"
+               className="w-full h-full object-cover opacity-100 scale-110"
+             />
+             <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-20" />
            </div>
-           
-           <div className="absolute bottom-8 right-8 font-mono text-[100px] leading-none text-white/20 font-bold z-0 mix-blend-overlay">
-              0{activeHighlight.id}
-           </div>
-
         </div>
         
       </section>
@@ -328,31 +212,21 @@ export const Arts = () => {
             id="arts-exhibitions"
             defaultData={defaultExhibitions}
             containerClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12"
-            schema={[
-              { key: 'title', label: 'Title', type: 'text' },
-              { key: 'artist', label: 'Artist', type: 'text' },
-              { key: 'role', label: 'Role', type: 'text' },
-              { key: 'year', label: 'Year', type: 'text' },
-              { key: 'location', label: 'Location', type: 'text' },
-              { key: 'image', label: 'Image', type: 'image' },
-              { key: 'description', label: 'Description', type: 'textarea' },
-              { key: 'materials', label: 'Materials / Technologies', type: 'text' },
-              { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
-            ]}
+            schema={exhibitionsSchema}
             renderItem={(item: any, index: number) => (
               <motion.div
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.6, delay: index * 0.05 }}
-                className="cursor-pointer"
+                className="cursor-pointer touch-pan-y"
                 onClick={() => setSelectedWork(item)}
               >
                 <div className="relative overflow-hidden mb-4">
                   <img
                     src={item.image}
                     alt={item.title}
-                    className="w-full h-auto object-cover transition-all duration-700 group-hover:scale-105"
+                    className="w-full h-auto object-cover transition-all duration-700 group-hover:scale-105 pointer-events-none select-none"
                   />
                 </div>
                 <div className="flex flex-col gap-1 border-t border-transparent group-hover:border-neutral-200 pt-4 transition-colors duration-300">
@@ -378,14 +252,14 @@ export const Arts = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="group cursor-pointer mb-20"
+                  className="group cursor-pointer mb-20 touch-pan-y"
                   onClick={() => setSelectedWork(item)}
                 >
                   <div className="relative overflow-hidden mb-4">
                     <img
                       src={item.image}
                       alt={item.title}
-                      className="w-full h-auto object-cover grayscale-0 transition-all duration-700 group-hover:scale-105"
+                      className="w-full h-auto object-cover grayscale-0 transition-all duration-700 group-hover:scale-105 pointer-events-none select-none"
                     />
                   </div>
                   <div className="flex flex-col gap-1 border-t border-transparent group-hover:border-neutral-200 pt-4 transition-colors duration-300">
@@ -424,12 +298,16 @@ export const Arts = () => {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col md:flex-row"
             >
-              <button 
-                onClick={() => setSelectedWork(null)}
-                className="absolute top-4 right-4 z-20 p-2 bg-white/50 hover:bg-white rounded-full transition-colors"
-              >
-                <X className="w-6 h-6 text-neutral-900" />
-              </button>
+              <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                {canEditExhibitions && (
+                  <button onClick={() => setEditingWorkInModal(true)} className="p-2 bg-teal-100 hover:bg-teal-200 rounded-full transition-colors text-teal-700" title="Edit exhibition">
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                )}
+                <button onClick={() => { setSelectedWork(null); setEditingWorkInModal(false); }} className="p-2 bg-white/50 hover:bg-white rounded-full transition-colors">
+                  <X className="w-6 h-6 text-neutral-900" />
+                </button>
+              </div>
 
               {/* Media Section - Left Side (Landscape/Rectangular) */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
@@ -491,6 +369,8 @@ export const Arts = () => {
           </div>
         )}
       </AnimatePresence>
+
+      <EditModal isOpen={editingWorkInModal} onClose={() => setEditingWorkInModal(false)} onSave={handleSaveWorkEdit} data={selectedWork || {}} schema={exhibitionsSchema} title="Edit Exhibition" />
     </div>
   );
 };
