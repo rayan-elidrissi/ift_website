@@ -847,6 +847,7 @@ export const Events = () => {
                     { label: 'Add to Calendar', primary: false },
                   ]}
                 />
+                </div>
               </div>
             </motion.div>
           </div>

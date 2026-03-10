@@ -1,25 +1,28 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { Toaster } from 'sonner';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
-import { FeaturedProjects } from './components/FeaturedProjects';
-import { ComingSoon } from './components/ComingSoon';
-import { About } from './components/About';
-import { Research } from './components/Research';
-import { Education } from './components/Education';
-import { Events } from './components/Events';
-import { Arts } from './components/Arts';
-import { Collaborate } from './components/Collaborate';
-import { Login } from './components/Login';
-import { AuthCallback } from './components/AuthCallback';
-import { Dashboard } from './components/Dashboard';
-import { Migrate } from './components/Migrate';
-import { ProtectedRoute } from './components/ProtectedRoute';
 import { Footer } from './components/Footer';
 import { CMSWrapper } from './components/cms/CMSWrapper';
 import { PasswordGate, isGateConfigured } from './components/PasswordGate';
+import { ProtectedRoute } from './components/ProtectedRoute';
+
+const Hero = lazy(() => import('./components/Hero').then(m => ({ default: m.Hero })));
+const FeaturedProjects = lazy(() => import('./components/FeaturedProjects').then(m => ({ default: m.FeaturedProjects })));
+const ComingSoon = lazy(() => import('./components/ComingSoon').then(m => ({ default: m.ComingSoon })));
+const About = lazy(() => import('./components/About').then(m => ({ default: m.About })));
+const Research = lazy(() => import('./components/Research').then(m => ({ default: m.Research })));
+const Education = lazy(() => import('./components/Education').then(m => ({ default: m.Education })));
+const Events = lazy(() => import('./components/Events').then(m => ({ default: m.Events })));
+const Arts = lazy(() => import('./components/Arts').then(m => ({ default: m.Arts })));
+const Collaborate = lazy(() => import('./components/Collaborate').then(m => ({ default: m.Collaborate })));
+const Login = lazy(() => import('./components/Login').then(m => ({ default: m.Login })));
+const AuthCallback = lazy(() => import('./components/AuthCallback').then(m => ({ default: m.AuthCallback })));
+const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const Migrate = lazy(() => import('./components/Migrate').then(m => ({ default: m.Migrate })));
+
+const PageFallback = () => <div className="min-h-[50vh] flex items-center justify-center" aria-label="Loading" />;
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -51,6 +54,7 @@ const AppContent = () => {
       <div className="bg-white min-h-screen text-neutral-900 font-sans selection:bg-teal-200 selection:text-teal-900 flex flex-col">
         <Navbar />
         <main className="flex-grow pt-16">
+          <Suspense fallback={<PageFallback />}>
           <Routes>
               <Route path="/" element={
                 <>
@@ -80,6 +84,7 @@ const AppContent = () => {
                 </ProtectedRoute>
               } />
             </Routes>
+          </Suspense>
           </main>
           <Footer />
         </div>
