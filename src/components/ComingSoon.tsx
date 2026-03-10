@@ -159,7 +159,7 @@ export const ComingSoon = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
             >
               <button
                 onClick={() => setViewingItem(null)}
@@ -191,8 +191,9 @@ export const ComingSoon = () => {
                 </div>
               </div>
 
-              <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
-                <div className="mb-6">
+              <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
+                <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+                  <div className="mb-6">
                   <div className="flex flex-wrap gap-2 mb-4">
                     {normalizeTags(viewingItem.tags).map((tag: string) => (
                       <span
@@ -218,6 +219,7 @@ export const ComingSoon = () => {
                       {viewingItem.description || 'Details coming soon.'}
                     </p>
                   </div>
+                </div>
                 </div>
 
                 <CardButtons

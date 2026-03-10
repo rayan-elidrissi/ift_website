@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Plus, Trash2, Edit2, Image as ImageIcon, ArrowUp, ArrowDown } from 'lucide-react';
+import { X, Save, Plus, Trash2, Edit2, Image as ImageIcon, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react';
 import { useCMS } from '../../context/CMSContext';
 import { Switch } from '../ui/switch';
 import { EditableVideo } from './EditableVideo';
@@ -45,13 +45,24 @@ export const EditModal = ({ isOpen, onClose, onSave, data, schema, title }: Edit
     onSave(formData);
   };
 
+  const mediaSrc = formData.media || formData.image || formData.video;
+  const isVideo = typeof mediaSrc === 'string' && (mediaSrc.startsWith('data:video/') || /\.(mp4|webm|ogg)(\?|$)/i.test(mediaSrc));
+  const leftPanel = mediaSrc ? (
+    isVideo ? (
+      <video src={mediaSrc} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+    ) : (
+      <img src={mediaSrc} alt="" className="w-full h-full object-cover" />
+    )
+  ) : undefined;
+
   return (
     <CMSModal
       isOpen={isOpen}
       onClose={onClose}
       onSave={handleSave}
       title={title}
-      size="md"
+      size={leftPanel ? '5xl' : 'lg'}
+      leftPanel={leftPanel}
     >
       <div className="p-6 space-y-4">
         {schema.map((field) => {
@@ -181,8 +192,10 @@ export const EditableCollection = <T extends { id?: string }>({
   const [editingItem, setEditingItem] = useState<T | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
-  // Use displayItems if provided, otherwise use all items
-  const itemsToRender = displayItems || items;
+  // Use displayItems if provided, otherwise use all items.
+  // When not editing, filter out hidden items; when editing, show all (including hidden) so user can unhide.
+  const baseItems = displayItems || items;
+  const itemsToRender = editable ? baseItems : baseItems.filter((i: T & { hidden?: boolean }) => !i.hidden);
 
   const handleSaveItem = (itemData: T) => {
     let newItems = [...items];
@@ -202,10 +215,18 @@ export const EditableCollection = <T extends { id?: string }>({
   };
 
   const handleAddItem = (itemData: T) => {
-    const newItem = { ...itemData, id: Date.now().toString() }; // Ensure ID
+    const newItem = { ...itemData, id: Date.now().toString(), hidden: true } as T & { hidden?: boolean }; // New cards hidden by default
     const newItems = [...items, newItem];
     updateContent(id, newItems);
     setIsAdding(false);
+  };
+
+  const handleToggleHidden = (item: T & { hidden?: boolean }) => {
+    const index = items.findIndex(i => (i.id && i.id === item.id) || i === item);
+    if (index === -1) return;
+    const newItems = [...items];
+    newItems[index] = { ...newItems[index], hidden: !newItems[index].hidden } as T;
+    updateContent(id, newItems);
   };
 
   const handleDeleteItem = (itemToDelete: T) => {
@@ -232,7 +253,7 @@ export const EditableCollection = <T extends { id?: string }>({
     <>
       <div className={containerClassName}>
         {itemsToRender.map((item, index) => (
-          <div key={item.id || index} className={`relative group ${itemClassName}`} style={getItemStyle ? getItemStyle(item, index) : undefined}>
+          <div key={item.id || index} className={`relative group ${itemClassName} ${editable && (item as T & { hidden?: boolean }).hidden ? 'opacity-70' : ''}`} style={getItemStyle ? getItemStyle(item, index) : undefined}>
             {renderItem(item, index, editable, () => setEditingItem(item))}
             
             {editable && (
@@ -257,6 +278,17 @@ export const EditableCollection = <T extends { id?: string }>({
                   title="Edit"
                 >
                   <Edit2 className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleToggleHidden(item as T & { hidden?: boolean }); }}
+                  className={`p-2 rounded-full shadow-lg ${(item as T & { hidden?: boolean }).hidden ? 'bg-amber-600 text-white hover:bg-amber-700' : 'bg-neutral-700 text-white hover:bg-neutral-800'}`}
+                  title={(item as T & { hidden?: boolean }).hidden ? 'Unhide (show on site)' : 'Hide (hide from site)'}
+                >
+                  {(item as T & { hidden?: boolean }).hidden ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleDeleteItem(item); }}

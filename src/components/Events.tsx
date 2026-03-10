@@ -346,6 +346,9 @@ export const Events = () => {
   const allTalks = getContent('events-talks', talks) as typeof talks;
   const allFestivals = getContent('events-festivals', festivals) as typeof festivals;
   const allMisc = getContent('events-misc', misc) as typeof misc;
+  const visibleTalks = isEditing ? allTalks : (Array.isArray(allTalks) ? allTalks : []).filter((i: any) => !i.hidden);
+  const visibleFestivals = isEditing ? allFestivals : (Array.isArray(allFestivals) ? allFestivals : []).filter((i: any) => !i.hidden);
+  const visibleMisc = isEditing ? allMisc : (Array.isArray(allMisc) ? allMisc : []).filter((i: any) => !i.hidden);
   const [viewingTalk, setViewingTalk] = React.useState<typeof talks[0] | null>(null);
   const [viewingFestival, setViewingFestival] = React.useState<typeof festivals[0] | null>(null);
   const [viewingMisc, setViewingMisc] = React.useState<typeof misc[0] | null>(null);
@@ -516,7 +519,7 @@ export const Events = () => {
               className="[&_p]:m-0"
             />
           </motion.div>
-          <div className="text-lg md:text-xl text-neutral-500 font-serif italic max-w-2xl leading-relaxed">
+          <div className="text-lg md:text-xl text-neutral-500 font-serif italic mb-12 max-w-xl leading-relaxed">
             <EditableContent
               id="events-intro"
               defaultContent="Join us for talks, festivals, and celebrations at the intersection of technology, art, and innovation."
@@ -560,7 +563,7 @@ export const Events = () => {
              <>
                {/* Mobile: vertical stack (matches edit mode) */}
                <div className="grid grid-cols-1 gap-4 md:hidden">
-                 {allTalks.map((talk, index) => (
+                 {visibleTalks.map((talk, index) => (
                    <ProjectCard
                      key={talk.id}
                      title={talk.title || 'Untitled'}
@@ -576,7 +579,7 @@ export const Events = () => {
                {/* Desktop: carousel */}
                <div className="hidden md:block relative" onWheel={createTrackpadWheelHandler(talksSliderRef, talksLastWheelAtRef)}>
                  <Slider ref={talksSliderRef} {...talksSettings}>
-                   {allTalks.map((talk, index) => (
+                   {visibleTalks.map((talk, index) => (
                      <div key={talk.id} className="px-3">
                        <ProjectCard
                          title={talk.title || 'Untitled'}
@@ -629,7 +632,7 @@ export const Events = () => {
              <>
                {/* Mobile: vertical stack (matches edit mode) */}
                <div className="grid grid-cols-1 gap-4 md:hidden">
-                 {allFestivals.map((fest, index) => (
+                 {visibleFestivals.map((fest, index) => (
                    <ProjectCard
                      key={fest.id ?? fest.year}
                      title={fest.theme || 'Untitled'}
@@ -645,7 +648,7 @@ export const Events = () => {
                {/* Desktop: carousel */}
                <div className="hidden md:block relative" onWheel={createTrackpadWheelHandler(festivalsSliderRef, festivalsLastWheelAtRef)}>
                  <Slider ref={festivalsSliderRef} {...festivalsSettings}>
-                   {allFestivals.map((fest, index) => (
+                   {visibleFestivals.map((fest, index) => (
                      <div key={fest.id ?? fest.year} className="px-3">
                        <ProjectCard
                          title={fest.theme || 'Untitled'}
@@ -699,7 +702,7 @@ export const Events = () => {
              <>
                {/* Mobile: vertical stack (matches edit mode) */}
                <div className="grid grid-cols-1 gap-4 md:hidden">
-                 {allMisc.map((item, index) => (
+                 {visibleMisc.map((item, index) => (
                    <ProjectCard
                      key={item.id}
                      title={item.title || 'Untitled'}
@@ -716,7 +719,7 @@ export const Events = () => {
                {/* Desktop: carousel */}
                <div className="hidden md:block relative" onWheel={createTrackpadWheelHandler(miscSliderRef, miscLastWheelAtRef)}>
                  <Slider ref={miscSliderRef} {...miscSettings}>
-                   {allMisc.map((item, index) => (
+                   {visibleMisc.map((item, index) => (
                      <div key={item.id} className="px-3">
                        <ProjectCard
                          title={item.title || 'Untitled'}
@@ -753,7 +756,7 @@ export const Events = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
             >
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
                 {canEditTalks && (
@@ -779,8 +782,9 @@ export const Events = () => {
               </div>
 
               {/* Content Section - Right Side */}
-              <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
-                <div className="mb-6">
+              <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
+                <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+                  <div className="mb-6">
                   {toArray(viewingTalk.tags).length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
                       {toArray(viewingTalk.tags).map((tag: string) => (
@@ -834,7 +838,7 @@ export const Events = () => {
                       )}
                     </div>
                   )}
-                </div>
+                  </div>
 
                 <CardButtons
                   item={viewingTalk}
@@ -865,7 +869,7 @@ export const Events = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
             >
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
                 {canEditFestivals && (
@@ -893,8 +897,8 @@ export const Events = () => {
               </div>
 
               {/* Content Section - Right Side */}
-              <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
-                <div className="mb-6">
+              <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
+                <div className="flex-1 min-h-0 overflow-y-auto pr-2">
                   {toArray(viewingFestival.tags).length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
                       {toArray(viewingFestival.tags).map((tag: string) => (
@@ -975,7 +979,7 @@ export const Events = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
             >
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
                 {canEditMisc && (
@@ -1003,8 +1007,8 @@ export const Events = () => {
               </div>
 
               {/* Content Section - Right Side */}
-              <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
-                <div className="mb-6">
+              <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
+                <div className="flex-1 min-h-0 overflow-y-auto pr-2">
                   {toArray(viewingMisc.tags).length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
                       {toArray(viewingMisc.tags).map((tag: string) => (

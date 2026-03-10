@@ -13,7 +13,7 @@ export const About = () => {
         id="about"
         className="relative pt-16 md:pt-20 lg:pt-24 pb-24 lg:pb-32 bg-white text-neutral-900 overflow-hidden font-serif"
       >
-        <div className="max-w-[1920px] mx-auto px-6 lg:px-12 relative z-10">
+        <div className="max-w-[1920px] mx-auto px-6 lg:px-12 xl:px-20 relative z-10">
           {/* Laptop display: left = Title + Subtitle + Intro + Pillars, right = Image */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-16 lg:items-stretch">
             {/* Left column: Title, Subtitle, Intro, Pillars */}
@@ -27,17 +27,17 @@ export const About = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-4xl sm:text-5xl md:text-6xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold tracking-tighter mb-2 text-neutral-900 leading-[0.95] lg:leading-[1.1] uppercase break-words max-w-full min-w-0 lg:[word-spacing:100vw]"
+                  className="text-4xl md:text-6xl font-bold tracking-tighter mb-4 text-neutral-900 leading-[0.9] uppercase"
                   role="heading"
                   aria-level={1}
                 >
                   <EditableContent id="about-title" defaultContent="INSTITUTE FOR FUTURE TECHNOLOGIES" enableProse={false} />
                 </motion.div>
-                <div className="text-lg md:text-xl text-neutral-900 font-sans italic leading-relaxed max-w-lg mt-1">
+                <div className="text-lg md:text-xl text-neutral-500 font-serif italic leading-relaxed max-w-xl mt-1">
                   <EditableContent id="about-subtitle" defaultContent="De Vinci Higher Education" enableProse={false} />
                 </div>
               </div>
-              <div className="font-sans text-neutral-500 text-sm md:text-base leading-relaxed border-l-2 border-neutral-200 pl-6">
+              <div className="text-lg md:text-xl text-neutral-500 font-serif italic leading-relaxed border-l-2 border-neutral-200 pl-6 max-w-xl">
                 <EditableContent id="about-intro" defaultContent="We prepare students to navigate and transform uncertain futures by cultivating how they think, build, and adapt alongside mentors and peers. At IFT, knowledge is constructed through making between and beyond disciplines, in direct engagement with a global ecosystem of research, art, and innovation." />
               </div>
               <div className="space-y-8 font-sans">

@@ -245,7 +245,7 @@ export const Education = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-lg md:text-xl text-neutral-500 font-serif italic mb-12 max-w-lg leading-relaxed"
+              className="text-lg md:text-xl text-neutral-500 font-serif italic mb-12 max-w-xl leading-relaxed"
             >
               <EditableContent
                 id="education-tagline"

@@ -6,6 +6,7 @@ import Masonry, {
 } from "react-responsive-masonry";
 import { EditableContent } from './cms/EditableContent';
 import { EditableCollection, EditModal } from './cms/EditableCollection';
+import { EditableImageSingle } from './cms/EditableImageSingle';
 import { CardButtons } from './CardButtons';
 import { useCMS } from '../context/CMSContext';
 
@@ -111,6 +112,7 @@ const exhibitionsSchema = [
 export const Arts = () => {
   const { getContent, updateContent, isEditing, canEditKey } = useCMS();
   const allExhibitions = getContent('arts-exhibitions', defaultExhibitions) as typeof defaultExhibitions;
+  const visibleExhibitions = isEditing ? allExhibitions : (Array.isArray(allExhibitions) ? allExhibitions : []).filter((i: any) => !i.hidden);
 
   const [selectedWork, setSelectedWork] = useState<
     (typeof defaultExhibitions)[0] | null
@@ -170,13 +172,19 @@ export const Arts = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-lg md:text-xl text-neutral-600 font-sans leading-relaxed max-w-xl"
+            className="text-lg md:text-xl text-neutral-600 font-sans leading-relaxed max-w-xl space-y-4"
           >
             <EditableContent
-              id="arts-blurb"
-              defaultContent="Curated exhibitions at the intersection of material reality and digital innovation. Our Arts programme explores new aesthetics through code, sensors, and emerging technologies—from immersive projection mapping and spatial audio to kinetic sculpture and bio-art. We support artists and researchers who blur the boundaries between computation and craft, presenting work at venues including Ars Electronica, Centre Pompidou, SIGGRAPH, and the Venice Biennale."
+              id="arts-blurb-1"
+              defaultContent="Curated exhibitions at the intersection of material reality and digital innovation. Our Arts programme explores new aesthetics through code, sensors, and emerging technologies—from immersive projection mapping and spatial audio to kinetic sculpture and bio-art."
               enableProse={true}
-              className="[&_p]:mb-4 last:[&_p]:mb-0"
+              className="[&_p]:m-0"
+            />
+            <EditableContent
+              id="arts-blurb-2"
+              defaultContent="We support artists and researchers who blur the boundaries between computation and craft, presenting work at venues including Ars Electronica, Centre Pompidou, SIGGRAPH, and the Venice Biennale."
+              enableProse={true}
+              className="[&_p]:m-0"
             />
           </motion.div>
 
@@ -185,12 +193,13 @@ export const Arts = () => {
         {/* RIGHT COLUMN: Hero Image (Sticky) */}
         <div className="lg:w-1/2 lg:h-screen lg:sticky lg:top-0 bg-neutral-100 relative overflow-hidden hidden lg:block">
            <div className="absolute inset-0 z-0">
-             <img 
-               src={allExhibitions[0]?.image ?? "https://images.unsplash.com/photo-1545987796-b199d6abb1b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"} 
-               alt="Arts"
-               className="w-full h-full object-cover opacity-100 scale-110"
+             <EditableImageSingle
+               id="arts-hero-image"
+               defaultImage={visibleExhibitions[0]?.image ?? "https://images.unsplash.com/photo-1545987796-b199d6abb1b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"}
+               alt="Arts hero"
+               className="w-full h-full object-cover opacity-100"
              />
-             <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-20" />
+             <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-20 pointer-events-none" />
            </div>
         </div>
         
@@ -245,7 +254,7 @@ export const Arts = () => {
         ) : (
           <ResponsiveMasonry columnsCountBreakPoints={{ 350: 1, 750: 2, 1200: 3 }}>
             <Masonry gutter="40px">
-              {allExhibitions.map((item, index) => (
+              {visibleExhibitions.map((item, index) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 50 }}
@@ -296,7 +305,7 @@ export const Arts = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
             >
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
                 {canEditExhibitions && (
@@ -322,8 +331,9 @@ export const Arts = () => {
               </div>
 
               {/* Content Section - Right Side */}
-              <div className="flex-grow p-8 md:p-12 flex flex-col overflow-y-auto">
-                <div className="mb-6">
+              <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
+                <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+                  <div className="mb-6">
                   <div className="flex flex-wrap gap-2 mb-4">
                     {(Array.isArray(selectedWork.tags) ? selectedWork.tags : (selectedWork.tags || '').split(',')).map((tag: any, i: number) => (
                       <span key={i} className="px-2 py-1 bg-teal-50 text-teal-700 text-[10px] uppercase tracking-wider border border-teal-100 rounded-sm">
@@ -355,6 +365,7 @@ export const Arts = () => {
                       {selectedWork.materials}
                     </p>
                   </div>
+                </div>
                 </div>
 
                 <CardButtons

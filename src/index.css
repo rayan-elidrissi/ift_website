@@ -3774,3 +3774,25 @@ html {
 svg[aria-label="Institute for Future Technologies logo"] {
   color: var(--color-white);
 }
+
+/* Compact Sonner toast - just enough to fit content */
+[data-sonner-toast] {
+  padding: 6px 12px !important;
+  min-width: auto !important;
+  width: fit-content !important;
+}
+[data-sonner-toast] [data-icon] {
+  width: 16px !important;
+  height: 16px !important;
+}
+[data-sonner-toast] [data-icon] svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+[data-sonner-toast] [data-content] {
+  padding: 0 !important;
+}
+[data-sonner-toast] [data-title] {
+  font-size: 13px !important;
+  padding: 0 !important;
+}

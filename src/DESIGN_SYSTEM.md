@@ -48,6 +48,10 @@
 - **Standard**: `py-24 px-6 md:px-12`
 - **Hero Sections**: `pt-32 lg:pt-32 pb-24`
 
+### Hero Blurb Homogeneity (About, Research, Education, Arts, Collaborate)
+- **Container/Column padding**: `p-6 lg:p-12 xl:p-20` (left column of split layouts)
+- **Hero blurb max-width**: `max-w-lg` (512px) — consistent across all pages for visual alignment
+
 ### Card Gaps
 - **Standard Grid**: `gap-8`
 - **Tight Grid**: `gap-6`

@@ -84,7 +84,7 @@ export const Hero = () => {
               id="hero-blurb"
               defaultContent="A lab studio embedded in education, where students and researchers explore new forms of inquiry at the intersection of technology, human experience, and the natural world"
               enableProse={false}
-              className="text-lg md:text-xl lg:text-2xl font-sans font-light text-white/90 leading-relaxed max-w-2xl [&_p]:m-0"
+              className="text-lg md:text-xl lg:text-2xl font-sans font-light text-white/90 leading-relaxed max-w-6xl [&_p]:m-0"
             />
           </motion.div>
 

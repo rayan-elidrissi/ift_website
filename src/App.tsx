@@ -93,7 +93,7 @@ function App() {
       <AuthProvider>
         <AppContent />
       </AuthProvider>
-      <Toaster richColors position="bottom-right" />
+      <Toaster richColors position="bottom-left" />
     </Router>
   );
 }

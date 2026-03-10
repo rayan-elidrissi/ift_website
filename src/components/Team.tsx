@@ -292,7 +292,7 @@ export const Team = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
             >
               <button
                 onClick={() => setActiveMember(null)}
@@ -310,7 +310,8 @@ export const Team = () => {
                 />
               </div>
 
-              <div className="w-full md:w-3/5 p-8 md:p-10 text-neutral-900">
+              <div className="w-full md:w-3/5 p-8 md:p-10 flex flex-col min-h-0">
+              <div className="flex-1 min-h-0 overflow-y-auto text-neutral-900">
                 <p className="text-xs font-mono uppercase tracking-widest text-teal-700 mb-3">
                   Team Member
                 </p>
@@ -328,6 +329,7 @@ export const Team = () => {
                 <p className="text-base leading-relaxed text-neutral-700 whitespace-pre-line">
                   {activeMember.bio || 'Bio coming soon.'}
                 </p>
+              </div>
               </div>
             </motion.div>
           </div>

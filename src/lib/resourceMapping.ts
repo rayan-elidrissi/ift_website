@@ -80,6 +80,9 @@ export const CMS_KEY_TO_SLUG: Record<string, string> = {
 
   // Arts page
   'arts-title': 'page-arts',
+  'arts-blurb-1': 'page-arts',
+  'arts-blurb-2': 'page-arts',
+  'arts-hero-image': 'page-arts',
   'arts-intro': 'page-arts',
   'arts-featured-exhibitions-label': 'page-arts',
   'arts-exhibitions': 'page-arts',
