@@ -64,6 +64,7 @@ export const defaultStudentProjects = [
     description: "Advanced bionic prosthetic limbs featuring neural interface technology for natural movement control. This project combines cutting-edge robotics with biomedical engineering to create accessible, affordable prosthetics.",
     tags: ["Biomedical", "Robotics", "AI"],
     team: ["Sarah Chen", "Marcus Johnson"],
+    supervisor: "Dr. Lisa Badr",
     visible: "shown",
   },
   {
@@ -76,6 +77,7 @@ export const defaultStudentProjects = [
     description: "An immersive light field display system that creates volumetric 3D projections without the need for special glasses. This breakthrough in display technology opens new possibilities for collaborative design and visualization.",
     tags: ["Display Tech", "3D", "Optics"],
     team: ["Alex Rivera", "Kim Park"],
+    supervisor: "Prof. Marc Teyssier",
     visible: "shown",
   },
   {
@@ -88,6 +90,7 @@ export const defaultStudentProjects = [
     description: "Biodegradable smart wearables made from sustainable materials. These devices monitor health metrics while minimizing environmental impact through innovative material science and circular design principles.",
     tags: ["Sustainability", "Wearables", "Materials"],
     team: ["Jordan Lee", "Emma Wilson"],
+    supervisor: "Dr. Sarah Chen",
     visible: "shown",
   },
   {
@@ -99,7 +102,8 @@ export const defaultStudentProjects = [
     video: "",
     description: "Exploring living materials that can self-heal and adapt to their environment. This research combines synthetic biology with material science to create responsive, sustainable building materials.",
     tags: ["Bio-Materials", "Synthetic Biology", "Innovation"],
-    team: ["Dr. Lisa Badr", "Michael Zhang"],
+    team: ["Michael Zhang"],
+    supervisor: "Dr. Lisa Badr",
     visible: "shown",
   },
   {
@@ -112,6 +116,7 @@ export const defaultStudentProjects = [
     description: "An immersive virtual reality platform designed to make complex scientific concepts accessible through interactive 3D visualizations. Students can explore molecular structures, physics simulations, and historical events in unprecedented detail.",
     tags: ["VR", "Education", "Interaction"],
     team: ["Taylor Brown", "Chris Anderson"],
+    supervisor: "Prof. Antoine Prouzeau",
     visible: "shown",
   },
   {
@@ -124,6 +129,7 @@ export const defaultStudentProjects = [
     description: "Autonomous urban mobility system that combines electric vehicles, AI navigation, and sustainable infrastructure. This project reimagines city transportation for the carbon-neutral future.",
     tags: ["Mobility", "AI", "Sustainability"],
     team: ["Jamie Martinez", "Sam Taylor"],
+    supervisor: "Dr. Kevin Lee",
     visible: "shown",
   },
 ];
@@ -166,6 +172,7 @@ export const Education = () => {
         ...viewingProject,
         tags: Array.isArray(viewingProject.tags) ? viewingProject.tags.join(", ") : (viewingProject.tags || ""),
         team: Array.isArray(viewingProject.team) ? viewingProject.team.join(", ") : (viewingProject.team || ""),
+        supervisor: Array.isArray(viewingProject.supervisor) ? viewingProject.supervisor.join(", ") : (viewingProject.supervisor || ""),
       });
     } else {
       setEditingProjectInModal(false);
@@ -176,11 +183,13 @@ export const Education = () => {
     if (!viewingProject) return;
     const tagsVal = editProjectForm.tags;
     const teamVal = editProjectForm.team;
+    const supervisorVal = editProjectForm.supervisor;
     const updated = {
       ...viewingProject,
       ...editProjectForm,
       tags: typeof tagsVal === "string" ? tagsVal.split(",").map((s: string) => s.trim()).filter(Boolean) : tagsVal,
       team: typeof teamVal === "string" ? teamVal.split(",").map((s: string) => s.trim()).filter(Boolean) : teamVal,
+      supervisor: typeof supervisorVal === "string" ? supervisorVal.split(",").map((s: string) => s.trim()).filter(Boolean) : supervisorVal,
     };
     const newProjects = allProjects.map((p) => (p.id === viewingProject.id ? updated : p));
     updateContent("edu-student-projects", newProjects);
@@ -548,7 +557,12 @@ export const Education = () => {
               },
               {
                 key: "team",
-                label: "Team (comma separated)",
+                label: "Team - Students (comma separated)",
+                type: "text",
+              },
+              {
+                key: "supervisor",
+                label: "Supervisor - Staff (comma separated)",
                 type: "text",
               },
               {
@@ -692,10 +706,10 @@ export const Education = () => {
               <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
                 {editingProjectInModal ? (
                   <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
-                    {["title", "student", "description", "tags", "team"].map((key) => (
+                    {["title", "student", "description", "tags", "team", "supervisor"].map((key) => (
                       <div key={key}>
                         <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1">
-                          {key === "tags" ? "Tags (comma separated)" : key === "team" ? "Team (comma separated)" : key.charAt(0).toUpperCase() + key.slice(1)}
+                          {key === "tags" ? "Tags (comma separated)" : key === "team" ? "Team - Students (comma separated)" : key === "supervisor" ? "Supervisor - Staff (comma separated)" : key.charAt(0).toUpperCase() + key.slice(1)}
                         </label>
                         {key === "description" ? (
                           <textarea
@@ -710,7 +724,7 @@ export const Education = () => {
                             value={(editProjectForm[key] as string) || ""}
                             onChange={(e) => setEditProjectForm((f) => ({ ...f, [key]: e.target.value }))}
                             className="w-full p-3 border border-neutral-300 rounded-lg text-sm"
-                            placeholder={key === "tags" ? "Biomedical, Robotics, AI" : key === "team" ? "Name 1, Name 2" : ""}
+                            placeholder={key === "tags" ? "Biomedical, Robotics, AI" : key === "team" ? "Student 1, Student 2" : key === "supervisor" ? "Dr. Name, Prof. Name" : ""}
                           />
                         )}
                       </div>
@@ -779,18 +793,40 @@ export const Education = () => {
                                   .split(",")
                                   .map((s: string) => s.trim())
                                   .filter(Boolean);
-                            return teamList.length > 0 ? (
+                            const supervisorList = Array.isArray(viewingProject.supervisor)
+                              ? viewingProject.supervisor
+                              : (typeof viewingProject.supervisor === "string" ? viewingProject.supervisor : "")
+                                  .split(",")
+                                  .map((s: string) => s.trim())
+                                  .filter(Boolean);
+                            return (
                               <>
-                                <h3 className="text-lg font-bold text-neutral-900 mt-6 mb-3">Project Team</h3>
-                                <div className="flex flex-wrap gap-2">
-                                  {teamList.map((member: string, i: number) => (
-                                    <span key={i} className="px-3 py-1 bg-neutral-100 text-neutral-700 text-sm rounded-full">
-                                      {member}
-                                    </span>
-                                  ))}
-                                </div>
+                                {teamList.length > 0 && (
+                                  <>
+                                    <h3 className="text-lg font-bold text-neutral-900 mt-6 mb-3">Project Team</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                      {teamList.map((member: string, i: number) => (
+                                        <span key={i} className="px-3 py-1 bg-neutral-100 text-neutral-700 text-sm rounded-full">
+                                          {member}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
+                                {supervisorList.length > 0 && (
+                                  <>
+                                    <h3 className="text-lg font-bold text-neutral-900 mt-6 mb-3">Supervisor</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                      {supervisorList.map((member: string, i: number) => (
+                                        <span key={i} className="px-3 py-1 bg-teal-50 text-teal-800 text-sm rounded-full border border-teal-200">
+                                          {member}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
                               </>
-                            ) : null;
+                            );
                           })()}
                         </div>
                       </div>

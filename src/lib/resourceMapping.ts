@@ -103,6 +103,10 @@ export const CMS_KEY_TO_SLUG: Record<string, string> = {
   'collaborate-tagline': 'page-collaborate',
   'collaborate-pathways-label': 'page-collaborate',
   'collaborate-types': 'page-collaborate',
+  'collaborate-partners-title': 'page-collaborate',
+  'collaborate-partners-subtitle': 'page-collaborate',
+  'collaborate-partners-prefix': 'page-collaborate',
+  'collaborate-partners-highlight': 'page-collaborate',
   'collaborate-partners': 'page-collaborate',
 
   // Footer

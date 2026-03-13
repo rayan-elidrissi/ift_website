@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, Calendar, MapPin, Users, X, ExternalLink, Edit2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, MapPin, Users, X, ExternalLink, Edit2 } from 'lucide-react';
 import Slider from 'react-slick';
 import { ProjectCard } from './ProjectCard';
 import { CardButtons } from './CardButtons';
@@ -279,13 +279,21 @@ const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1540575467063-178a5
 
 // Custom Arrow Components
 const CustomArrow = ({ onClick, direction }: { onClick?: () => void; direction: 'prev' | 'next' }) => (
-  direction === 'prev' ? null :
-  <button
-    onClick={onClick}
-    className={`absolute top-1/2 -translate-y-1/2 -right-4 md:-right-12 z-20 w-10 h-10 flex items-center justify-center bg-neutral-900 hover:bg-teal-600 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl`}
-  >
-    <ChevronRight className="w-5 h-5" />
-  </button>
+  direction === 'prev' ? (
+    <button
+      onClick={onClick}
+      className="absolute top-1/2 -translate-y-1/2 -left-4 md:-left-12 z-20 w-10 h-10 flex items-center justify-center bg-neutral-900 hover:bg-teal-600 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
+    >
+      <ChevronLeft className="w-5 h-5" />
+    </button>
+  ) : (
+    <button
+      onClick={onClick}
+      className="absolute top-1/2 -translate-y-1/2 -right-4 md:-right-12 z-20 w-10 h-10 flex items-center justify-center bg-neutral-900 hover:bg-teal-600 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
+    >
+      <ChevronRight className="w-5 h-5" />
+    </button>
+  )
 );
 
 const talksSchema = [

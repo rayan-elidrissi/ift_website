@@ -281,7 +281,7 @@ export const EditableCollection = <T extends { id?: string }>({
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleToggleHidden(item as T & { hidden?: boolean }); }}
-                  className={`p-2 rounded-full shadow-lg ${(item as T & { hidden?: boolean }).hidden ? 'bg-amber-600 text-white hover:bg-amber-700' : 'bg-neutral-700 text-white hover:bg-neutral-800'}`}
+                  className="bg-teal-600 text-white p-2 rounded-full hover:bg-teal-700 shadow-lg"
                   title={(item as T & { hidden?: boolean }).hidden ? 'Unhide (show on site)' : 'Hide (hide from site)'}
                 >
                   {(item as T & { hidden?: boolean }).hidden ? (

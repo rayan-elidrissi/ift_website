@@ -54,11 +54,14 @@ function normalizeStudentProject(proj: {
   video?: string;
   tags?: string[];
   team?: string[];
+  supervisor?: string | string[];
   description?: string;
 }): UnifiedProject {
-  const authors = proj.team?.length
-    ? proj.team.join(', ')
-    : proj.student || '';
+  const teamStr = Array.isArray(proj.team) ? proj.team.join(', ') : (typeof proj.team === 'string' ? proj.team : '');
+  const supervisorStr = Array.isArray(proj.supervisor)
+    ? proj.supervisor.join(', ')
+    : typeof proj.supervisor === 'string' ? proj.supervisor : '';
+  const authors = [teamStr, supervisorStr].filter(Boolean).join(' | ') || proj.student || '';
   return {
     id: `stu-${proj.id}`,
     title: proj.title,
@@ -119,6 +122,7 @@ export function buildFeaturedProjectPool(
     video?: string;
     tags?: string[];
     team?: string[];
+    supervisor?: string | string[];
     description?: string;
     visible?: string;
   }>,
