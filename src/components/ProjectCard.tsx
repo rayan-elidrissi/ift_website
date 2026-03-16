@@ -121,8 +121,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       transition={{ delay: index * 0.1 }}
       whileHover={variant === 'geometric' ? { y: -20, rotate: index % 2 === 0 ? 1 : -1 } : variant === 'minimal' ? { y: -8 } : {}}
       onClick={onClick}
-      className={`relative ${aspectClasses[aspectRatio]} group cursor-pointer touch-pan-y ${className}`}
+      className={`flex flex-col gap-4 sm:gap-5 ${className}`}
     >
+      <div className={`relative ${aspectClasses[aspectRatio]} group cursor-pointer touch-pan-y min-w-0 flex-shrink-0`}>
       <div className={`absolute inset-0 ${
         variant === 'bordered' 
           ? 'bg-white border border-neutral-200 hover:border-teal-500 shadow-sm hover:shadow-2xl' 
@@ -160,21 +161,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         )}
       </div>
 
-      {/* Below card content for minimal and bordered variants */}
-      {(variant === 'minimal' || variant === 'bordered') && (
-        <div className="absolute -bottom-24 left-0 right-0 px-2">
-          <div className="flex items-baseline justify-between mb-2">
-            <span className={`${accentColor} text-xs font-mono uppercase tracking-widest`}>
-              {tags[0] || subtitle}
-            </span>
-            {year && <span className="text-neutral-400 text-xs font-mono">{year}</span>}
-          </div>
-          <h3 className="text-xl font-sans font-medium leading-tight text-neutral-900 group-hover:text-teal-600 transition-colors">
-            {title}
-          </h3>
-        </div>
-      )}
-
       {/* Tags for bordered variant inside card */}
       {variant === 'bordered' && tags && tags.length > 0 && (
         <div className="absolute top-16 left-3 flex flex-wrap gap-2 z-10">
@@ -183,6 +169,22 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               {tag}
             </span>
           ))}
+        </div>
+      )}
+      </div>
+
+      {/* Below card content for minimal and bordered variants - in normal flow for proper mobile stacking */}
+      {(variant === 'minimal' || variant === 'bordered') && (
+        <div className="px-1 min-w-0">
+          <div className="flex items-baseline justify-between mb-2 gap-2">
+            <span className={`${accentColor} text-xs font-mono uppercase tracking-widest truncate`}>
+              {tags[0] || subtitle}
+            </span>
+            {year && <span className="text-neutral-400 text-xs font-mono shrink-0">{year}</span>}
+          </div>
+          <h3 className="text-base sm:text-xl font-sans font-medium leading-tight text-neutral-900 group-hover:text-teal-600 transition-colors line-clamp-2">
+            {title}
+          </h3>
         </div>
       )}
     </motion.div>

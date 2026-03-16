@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
-import { LogIn, LogOut, Menu, X, LayoutDashboard, Lock, Twitter, Linkedin, Instagram, Github } from "lucide-react";
+import { LogIn, LogOut, Menu, X, Twitter, Linkedin, Instagram, Github } from "lucide-react";
 import { useCMS } from "../context/CMSContext";
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useLocation, useNavigate } from "react-router";
@@ -9,7 +9,7 @@ import { isGateConfigured } from "./PasswordGate";
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut } = useAuth();
   const { getContent } = useCMS();
   const socialLinks = {
     twitter: getContent("footer-social-twitter", "#"),
@@ -49,7 +49,6 @@ export const Navbar = () => {
     { name: "Education", href: "/education" },
     { name: "Arts", href: "/arts" },
     { name: "Collaborate", href: "/collaborate" },
-    { name: "Events", href: "/events" },
   ];
 
   return (
@@ -110,24 +109,7 @@ export const Navbar = () => {
           <div className="hidden lg:flex items-center space-x-6 ml-12 flex-shrink-0 relative z-[60]">
             {isLoggedIn ? (
               <>
-                {isAdmin && (
-                  <Link
-                    to="/dashboard"
-                    className="text-neutral-400 hover:text-teal-600 transition-colors p-2 cursor-pointer rounded inline-flex items-center justify-center"
-                    title="Dashboard"
-                  >
-                    <LayoutDashboard className="w-5 h-5" />
-                  </Link>
-                )}
-                {gateConfigured ? (
-                  <button
-                    onClick={handleLogout}
-                    className="text-neutral-400 hover:text-teal-600 transition-colors p-2 cursor-pointer rounded inline-flex items-center justify-center"
-                    title="Verrouiller le site (revoir la porte mot de passe)"
-                  >
-                    <Lock className="w-5 h-5" />
-                  </button>
-                ) : (
+                {!gateConfigured && (
                   <button
                     onClick={handleLogout}
                     className="text-neutral-400 hover:text-neutral-900 transition-colors p-2 cursor-pointer rounded"
@@ -237,32 +219,15 @@ export const Navbar = () => {
                     <div className="pt-6 border-t border-neutral-200 flex flex-col gap-4">
                       {isLoggedIn ? (
                         <>
-                          {isAdmin && (
-                            <Link
-                              to="/dashboard"
-                              className="flex items-center gap-3 text-neutral-500 font-sans text-sm uppercase tracking-wider hover:text-teal-600 transition-colors py-2"
-                              onClick={() => setIsMobileMenuOpen(false)}
+                          {!gateConfigured && (
+                            <button
+                              onClick={handleLogout}
+                              className="flex items-center justify-start gap-3 text-neutral-500 font-sans text-sm uppercase tracking-wider hover:text-teal-600 transition-colors py-2 cursor-pointer w-full"
                             >
-                              <LayoutDashboard className="w-5 h-5" />
-                              <span>Dashboard</span>
-                            </Link>
+                              <LogOut className="w-5 h-5" />
+                              <span>Sign Out</span>
+                            </button>
                           )}
-                          <button
-                            onClick={handleLogout}
-                            className="flex items-center justify-start gap-3 text-neutral-500 font-sans text-sm uppercase tracking-wider hover:text-teal-600 transition-colors py-2 cursor-pointer w-full"
-                          >
-                            {gateConfigured ? (
-                              <>
-                                <Lock className="w-5 h-5" />
-                                <span>Verrouiller</span>
-                              </>
-                            ) : (
-                              <>
-                                <LogOut className="w-5 h-5" />
-                                <span>Sign Out</span>
-                              </>
-                            )}
-                          </button>
                         </>
                       ) : (
                         <button

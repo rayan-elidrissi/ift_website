@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import CORS_ORIGINS, DB_PATH, DB_UPLOAD_BASE_PATH
 from app.db.resource_db import ResourceDB
 from app.routers import auth, resources
+from app.routers.export import router as export_router
 from app.routers.search_router import router as search_router
 from app.routers.upload import router as upload_router
 from app.search.resource_search import ResourceSearch
@@ -46,6 +47,7 @@ app.include_router(resources.publish_router)
 app.include_router(resources.move_router)
 app.include_router(search_router)
 app.include_router(upload_router)
+app.include_router(export_router)
 app.include_router(auth.router)
 
 # Serve uploaded files

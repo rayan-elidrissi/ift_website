@@ -220,7 +220,7 @@ export const Arts = () => {
           <EditableCollection
             id="arts-exhibitions"
             defaultData={defaultExhibitions}
-            containerClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12"
+            containerClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-12"
             schema={exhibitionsSchema}
             renderItem={(item: any, index: number) => (
               <motion.div
@@ -253,7 +253,7 @@ export const Arts = () => {
           />
         ) : (
           <ResponsiveMasonry columnsCountBreakPoints={{ 350: 1, 750: 2, 1200: 3 }}>
-            <Masonry gutter="40px">
+            <Masonry gutter="24px">
               {visibleExhibitions.map((item, index) => (
                 <motion.div
                   key={item.id}
@@ -261,7 +261,7 @@ export const Arts = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="group cursor-pointer mb-20 touch-pan-y"
+                  className="group cursor-pointer mb-8 md:mb-20 touch-pan-y min-w-0"
                   onClick={() => setSelectedWork(item)}
                 >
                   <div className="relative overflow-hidden mb-4">
@@ -331,7 +331,7 @@ export const Arts = () => {
               </div>
 
               {/* Content Section - Right Side */}
-              <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
+              <div className="flex-grow p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col min-h-0">
                 <div className="flex-1 min-h-0 overflow-y-auto pr-2">
                   <div className="mb-6">
                   <div className="flex flex-wrap gap-2 mb-4">

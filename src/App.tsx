@@ -10,11 +10,9 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 
 const Hero = lazy(() => import('./components/Hero').then(m => ({ default: m.Hero })));
 const FeaturedProjects = lazy(() => import('./components/FeaturedProjects').then(m => ({ default: m.FeaturedProjects })));
-const ComingSoon = lazy(() => import('./components/ComingSoon').then(m => ({ default: m.ComingSoon })));
 const About = lazy(() => import('./components/About').then(m => ({ default: m.About })));
 const Research = lazy(() => import('./components/Research').then(m => ({ default: m.Research })));
 const Education = lazy(() => import('./components/Education').then(m => ({ default: m.Education })));
-const Events = lazy(() => import('./components/Events').then(m => ({ default: m.Events })));
 const Arts = lazy(() => import('./components/Arts').then(m => ({ default: m.Arts })));
 const Collaborate = lazy(() => import('./components/Collaborate').then(m => ({ default: m.Collaborate })));
 const Login = lazy(() => import('./components/Login').then(m => ({ default: m.Login })));
@@ -51,7 +49,7 @@ const AppContent = () => {
   return (
     <CMSWrapper>
       <ScrollToTop />
-      <div className="bg-white min-h-screen text-neutral-900 font-sans selection:bg-teal-200 selection:text-teal-900 flex flex-col">
+      <div className="bg-white min-h-screen text-neutral-900 font-sans selection:bg-teal-200 selection:text-teal-900 flex flex-col overflow-x-hidden">
         <Navbar />
         <main className="flex-grow pt-16">
           <Suspense fallback={<PageFallback />}>
@@ -60,13 +58,12 @@ const AppContent = () => {
                 <>
                   <Hero />
                   <FeaturedProjects />
-                  <ComingSoon />
                 </>
               } />
               <Route path="/about" element={<About />} />
               <Route path="/research" element={<Research />} />
               <Route path="/education" element={<Education />} />
-              <Route path="/events" element={<Events />} />
+              <Route path="/events" element={<Navigate to="/" replace />} />
               <Route path="/arts" element={<Arts />} />
               <Route path="/collaborate" element={<Collaborate />} />
               {/* Redirect old contact route to collaborate */}

@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { EditableContent } from "./cms/EditableContent";
 import { EditableCollection } from "./cms/EditableCollection";
-import { CardButtons } from "./CardButtons";
+import { EditableImageSingle } from "./cms/EditableImageSingle";
 import { useCMS } from "../context/CMSContext";
 
 const educationPrograms = [
@@ -416,12 +416,15 @@ export const Education = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
           <div className="lg:col-span-5 relative">
             <div className="aspect-[4/5] bg-neutral-200 relative overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1755053757912-a63da9d6e0e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
-                alt="Student Prototyping"
-                className="w-full h-full object-cover transition-all duration-700"
-              />
-              <div className="absolute bottom-6 left-6 bg-white/90 p-4 backdrop-blur shadow-lg">
+              <div className="absolute inset-0">
+                <EditableImageSingle
+                  id="education-demo-or-die-image"
+                  defaultImage="https://images.unsplash.com/photo-1755053757912-a63da9d6e0e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
+                  alt="Demo or Die - Student Prototyping"
+                  className="h-full w-full [&_img]:object-cover [&_img]:transition-all [&_img]:duration-700"
+                />
+              </div>
+              <div className="absolute bottom-6 left-6 bg-white/90 p-4 backdrop-blur shadow-lg z-10">
                 <p className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-1">
                   Methodology
                 </p>
@@ -533,7 +536,7 @@ export const Education = () => {
           <EditableCollection
             id="edu-student-projects"
             defaultData={defaultStudentProjects}
-            containerClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            containerClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
             schema={[
               {
                 key: "title",
@@ -580,12 +583,6 @@ export const Education = () => {
                 label: "Visibility (shown / hidden)",
                 type: "text",
               },
-            { key: "button1_show", label: "Show button 1", type: "toggle" },
-            { key: "button1_label", label: "Button 1 - Text", type: "text", showWhen: "button1_show" },
-            { key: "button1_url", label: "Button 1 - URL", type: "text", showWhen: "button1_show" },
-            { key: "button2_show", label: "Show button 2", type: "toggle" },
-            { key: "button2_label", label: "Button 2 - Text", type: "text", showWhen: "button2_show" },
-            { key: "button2_url", label: "Button 2 - URL", type: "text", showWhen: "button2_show" },
             ]}
           renderItem={(project: any, index: number, isEditingCollection: boolean) => {
             const isVisible = (project.visible ?? "shown") !== "hidden";
@@ -594,7 +591,7 @@ export const Education = () => {
             }
             return (
               <div 
-                className={`group relative aspect-[4/3] overflow-hidden cursor-pointer h-full touch-pan-y ${
+                className={`group relative aspect-[4/3] overflow-hidden cursor-pointer h-full min-w-0 touch-pan-y ${
                   isVisible ? "bg-neutral-800" : "bg-neutral-900/50 opacity-60"
                 }`}
                 onClick={() => setViewingProject(project)}
@@ -703,7 +700,7 @@ export const Education = () => {
               </div>
 
               {/* Content Section - Right Side */}
-              <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
+              <div className="flex-grow p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col min-h-0">
                 {editingProjectInModal ? (
                   <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
                     {["title", "student", "description", "tags", "team", "supervisor"].map((key) => (
@@ -831,14 +828,6 @@ export const Education = () => {
                         </div>
                       </div>
                     </div>
-
-                    <CardButtons
-                      item={viewingProject}
-                      defaultButtons={[
-                        { label: "View Full Project", primary: true },
-                        { label: "Share", primary: false },
-                      ]}
-                    />
                   </>
                 )}
               </div>

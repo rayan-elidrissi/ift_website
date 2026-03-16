@@ -69,6 +69,7 @@ export const CMS_KEY_TO_SLUG: Record<string, string> = {
   'education-cursus-innovation-title': 'page-education',
   'education-cursus-research-led-title': 'page-education',
   'education-cursus-valorization-title': 'page-education',
+  'education-demo-or-die-image': 'page-education',
   'edu-philosophy-image': 'page-education',
   'edu-phil-1-title': 'page-education',
   'edu-phil-1': 'page-education',

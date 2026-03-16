@@ -170,7 +170,7 @@ export const Team = () => {
           <EditableCollection
             id="team-members-core"
             defaultData={coreTeamMembers}
-            containerClassName="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8"
+            containerClassName="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-x-4 md:gap-y-8"
             schema={[
               { key: 'name', label: 'Name', type: 'text' },
               { key: 'role', label: 'Role/Title', type: 'text' },
@@ -201,7 +201,7 @@ export const Team = () => {
                   </div>
                 </div>
 
-                <div className="text-center md:text-left">
+                <div className="text-center sm:text-left min-w-0">
                   <h4 className="text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{member.name}</h4>
                   <p className="text-[10px] font-sans uppercase tracking-wider text-neutral-500 group-hover:text-teal-500 transition-colors">{member.role}</p>
                 </div>
@@ -215,7 +215,7 @@ export const Team = () => {
           <EditableCollection
             id="team-members-affiliated"
             defaultData={affiliatedTeamMembers}
-            containerClassName="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8"
+            containerClassName="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-x-4 md:gap-y-8"
             schema={[
               { key: 'name', label: 'Name', type: 'text' },
               { key: 'role', label: 'Role/Title', type: 'text' },
@@ -246,7 +246,7 @@ export const Team = () => {
                   </div>
                 </div>
 
-                <div className="text-center md:text-left">
+                <div className="text-center sm:text-left min-w-0">
                   <h4 className="text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{member.name}</h4>
                   <p className="text-[10px] font-sans uppercase tracking-wider text-neutral-500 group-hover:text-teal-500 transition-colors">{member.role}</p>
                 </div>
@@ -310,7 +310,7 @@ export const Team = () => {
                 />
               </div>
 
-              <div className="w-full md:w-3/5 p-8 md:p-10 flex flex-col min-h-0">
+              <div className="w-full md:w-3/5 p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col min-h-0">
               <div className="flex-1 min-h-0 overflow-y-auto text-neutral-900">
                 <p className="text-xs font-mono uppercase tracking-widest text-teal-700 mb-3">
                   Team Member

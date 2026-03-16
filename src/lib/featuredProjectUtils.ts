@@ -18,6 +18,13 @@ export interface UnifiedProject {
   description?: string;
   abstract?: string;
   materials?: string;
+  /** Button config (from Research/Arts) – passed to CardButtons */
+  button1_show?: unknown;
+  button1_label?: string;
+  button1_url?: string;
+  button2_show?: unknown;
+  button2_label?: string;
+  button2_url?: string;
 }
 
 /** Normalize a research publication to unified format */
@@ -29,7 +36,15 @@ function normalizePublication(pub: {
   journal?: string;
   tags?: string[];
   image?: string;
+  media?: string;
+  video?: string;
   abstract?: string;
+  button1_show?: unknown;
+  button1_label?: string;
+  button1_url?: string;
+  button2_show?: unknown;
+  button2_label?: string;
+  button2_url?: string;
 }): UnifiedProject {
   return {
     id: `pub-${pub.id}`,
@@ -38,9 +53,15 @@ function normalizePublication(pub: {
     year: pub.year || '',
     journal: pub.journal || '',
     tags: Array.isArray(pub.tags) ? pub.tags : [],
-    image: pub.image || '',
+    image: pub.media || pub.video || pub.image || '',
     sourceType: 'publication',
     abstract: pub.abstract,
+    button1_show: pub.button1_show,
+    button1_label: pub.button1_label,
+    button1_url: pub.button1_url,
+    button2_show: pub.button2_show,
+    button2_label: pub.button2_label,
+    button2_url: pub.button2_url,
   };
 }
 
@@ -87,6 +108,12 @@ function normalizeExhibition(exh: {
   tags?: string[];
   description?: string;
   materials?: string;
+  button1_show?: unknown;
+  button1_label?: string;
+  button1_url?: string;
+  button2_show?: unknown;
+  button2_label?: string;
+  button2_url?: string;
 }): UnifiedProject {
   return {
     id: `art-${exh.id}`,
@@ -99,6 +126,12 @@ function normalizeExhibition(exh: {
     sourceType: 'art',
     description: exh.description,
     materials: exh.materials,
+    button1_show: exh.button1_show,
+    button1_label: exh.button1_label,
+    button1_url: exh.button1_url,
+    button2_show: exh.button2_show,
+    button2_label: exh.button2_label,
+    button2_url: exh.button2_url,
   };
 }
 
@@ -111,7 +144,15 @@ export function buildFeaturedProjectPool(
     journal?: string;
     tags?: string[];
     image?: string;
+    media?: string;
+    video?: string;
     abstract?: string;
+    button1_show?: unknown;
+    button1_label?: string;
+    button1_url?: string;
+    button2_show?: unknown;
+    button2_label?: string;
+    button2_url?: string;
   }>,
   studentProjects: Array<{
     id: string;
@@ -136,6 +177,12 @@ export function buildFeaturedProjectPool(
     tags?: string[];
     description?: string;
     materials?: string;
+    button1_show?: unknown;
+    button1_label?: string;
+    button1_url?: string;
+    button2_show?: unknown;
+    button2_label?: string;
+    button2_url?: string;
   }>
 ): UnifiedProject[] {
   const pubList = publications.map(normalizePublication);

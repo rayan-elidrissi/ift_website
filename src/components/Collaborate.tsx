@@ -277,34 +277,16 @@ export const Collaborate = () => {
                       ))}
                     </div>
 
-                    {(() => {
-                      const ctaUrl = (activeType as any).cta_url || '';
-                      const isExternal = ctaUrl.startsWith('http') || ctaUrl.startsWith('//');
-                      const btnContent = (
-                        <>
-                          <span className="absolute inset-0 w-0 bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:w-full transition-all duration-700 ease-out"></span>
-                          <span className="relative z-10">{activeType.cta}</span>
-                          <ArrowUpRight className="w-4 h-4 group-hover:rotate-45 transition-transform relative z-10" />
-                        </>
-                      );
-                      const btnClass = "bg-neutral-900 text-white px-6 py-3 uppercase text-xs font-bold tracking-widest hover:bg-teal-600 transition-all duration-300 flex items-center gap-3 w-fit group shadow-lg hover:shadow-2xl hover:shadow-teal-500/20 relative overflow-hidden";
-                      if (!ctaUrl) {
-                        return (
-                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={btnClass}>
-                            {btnContent}
-                          </motion.button>
-                        );
-                      }
-                      return isExternal ? (
-                        <motion.a href={ctaUrl} target="_blank" rel="noopener noreferrer" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={btnClass}>
-                          {btnContent}
-                        </motion.a>
-                      ) : (
-                        <motion.a href={ctaUrl} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={btnClass}>
-                          {btnContent}
-                        </motion.a>
-                      );
-                    })()}
+                    <motion.a
+                      href="mailto:ift@devinci.fr"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-neutral-900 text-white px-6 py-3 uppercase text-xs font-bold tracking-widest hover:bg-teal-600 transition-all duration-300 flex items-center gap-3 w-fit group shadow-lg hover:shadow-2xl hover:shadow-teal-500/20 relative overflow-hidden"
+                    >
+                      <span className="absolute inset-0 w-0 bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:w-full transition-all duration-700 ease-out"></span>
+                      <span className="relative z-10">{activeType.cta}</span>
+                      <ArrowUpRight className="w-4 h-4 group-hover:rotate-45 transition-transform relative z-10" />
+                    </motion.a>
                   </div>
                 </motion.div>
               </div>

@@ -790,7 +790,7 @@ export const Events = () => {
               </div>
 
               {/* Content Section - Right Side */}
-              <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
+              <div className="flex-grow p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col min-h-0">
                 <div className="flex-1 min-h-0 overflow-y-auto pr-2">
                   <div className="mb-6">
                   {toArray(viewingTalk.tags).length > 0 && (
@@ -906,7 +906,7 @@ export const Events = () => {
               </div>
 
               {/* Content Section - Right Side */}
-              <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
+              <div className="flex-grow p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col min-h-0">
                 <div className="flex-1 min-h-0 overflow-y-auto pr-2">
                   {toArray(viewingFestival.tags).length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
@@ -1016,7 +1016,7 @@ export const Events = () => {
               </div>
 
               {/* Content Section - Right Side */}
-              <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
+              <div className="flex-grow p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col min-h-0">
                 <div className="flex-1 min-h-0 overflow-y-auto pr-2">
                   {toArray(viewingMisc.tags).length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">

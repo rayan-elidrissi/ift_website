@@ -40,32 +40,43 @@ export const Migrate = () => {
         const content = [{ type: LEGACY_BLOCK_TYPE, uuid: `legacy-${slug}`, data }];
         try {
           const existing = await getResourceOptional(slug, 'Draft') ?? await getResourceOptional(slug, 'Published');
+          const payload = {
+            authors: existing?.authors ?? [],
+            tags: existing?.tags ?? [],
+            title: existing?.title || slug,
+            subtitle: existing?.subtitle ?? '',
+            abstract: existing?.abstract ?? '',
+            logo: existing?.logo ?? '',
+            banner: existing?.banner ?? '',
+            content,
+            bibliography: existing?.bibliography ?? '',
+          };
           if (existing) {
-            await updateResource(slug, {
-              authors: existing.authors,
-              tags: existing.tags,
-              title: existing.title || slug,
-              subtitle: existing.subtitle,
-              abstract: existing.abstract,
-              logo: existing.logo,
-              banner: existing.banner,
-              content,
-              bibliography: existing.bibliography,
-            });
+            await updateResource(slug, payload);
             log(`Updated ${slug}`);
           } else {
-            await createResource(slug, {
-              authors: [],
-              tags: [],
-              title: slug,
-              subtitle: '',
-              abstract: '',
-              logo: '',
-              banner: '',
-              content,
-              bibliography: '',
-            });
-            log(`Created ${slug}`);
+            try {
+              await createResource(slug, {
+                authors: [],
+                tags: [],
+                title: slug,
+                subtitle: '',
+                abstract: '',
+                logo: '',
+                banner: '',
+                content,
+                bibliography: '',
+              });
+              log(`Created ${slug}`);
+            } catch (createErr) {
+              const createMsg = createErr instanceof Error ? createErr.message : String(createErr);
+              if (createMsg.includes('already exists')) {
+                await updateResource(slug, payload);
+                log(`Updated ${slug} (existed, overwritten)`);
+              } else {
+                throw createErr;
+              }
+            }
           }
         } catch (e) {
           const errMsg = e instanceof Error ? e.message : String(e);

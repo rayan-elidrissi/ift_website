@@ -109,7 +109,7 @@ export const FeaturedProjects = () => {
           defaultSelectedIds={defaultIds}
         />
 
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {featuredProjects.map((project, index) => (
             <motion.div
               key={project.id}
@@ -118,7 +118,7 @@ export const FeaturedProjects = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.05 }}
               onClick={() => setViewingProject(project)}
-              className="break-inside-avoid mb-8 group bg-white border border-neutral-200 hover:border-teal-500 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col shadow-sm hover:shadow-2xl relative touch-pan-y"
+              className="group bg-white border border-neutral-200 hover:border-teal-500 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col shadow-sm hover:shadow-2xl relative touch-pan-y min-w-0"
             >
               {/* Decorative corner */}
               <div className="absolute top-0 right-0 w-8 h-8 bg-neutral-100 -mr-4 -mt-4 rotate-45 transform group-hover:bg-teal-500 transition-colors z-20"></div>
@@ -147,7 +147,7 @@ export const FeaturedProjects = () => {
               </div>
 
               {/* Content */}
-              <div className="p-6 flex flex-col flex-grow relative">
+              <div className="p-4 sm:p-6 flex flex-col flex-grow relative">
                 <div className="absolute top-0 left-6 w-px h-6 bg-neutral-200 group-hover:h-full group-hover:bg-teal-500/20 transition-all duration-500"></div>
 
                 {project.sourceType !== 'student' && (
@@ -232,7 +232,7 @@ export const FeaturedProjects = () => {
             </div>
 
             {/* Content Section - Right Side */}
-            <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
+            <div className="flex-grow p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col min-h-0">
               <div className="flex-1 min-h-0 overflow-y-auto pr-2">
                 <div className="mb-6">
                 {viewingProject.sourceType !== 'student' && (
@@ -274,10 +274,12 @@ export const FeaturedProjects = () => {
               </div>
               </div>
 
-              <CardButtons
-                item={viewingProject}
-                defaultButtons={getDefaultButtons(viewingProject)}
-              />
+              {viewingProject.sourceType !== 'student' && (
+                <CardButtons
+                  item={viewingProject}
+                  defaultButtons={getDefaultButtons(viewingProject)}
+                />
+              )}
             </div>
           </motion.div>
         </div>

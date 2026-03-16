@@ -25,6 +25,8 @@ type CMSContextType = {
   canEditKey: (key: string) => boolean;
   isLoading: boolean;
   isApiConfigured: boolean;
+  /** Force re-fetch CMS data from API */
+  reloadData: () => Promise<void>;
 };
 
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
@@ -66,8 +68,8 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
             }
           }
         }
-      } catch {
-        // skip failed slug
+      } catch (e) {
+        if (import.meta.env.DEV) console.warn('[CMS] Failed to load slug:', slug, e);
       }
     }
     setData(merged);
@@ -216,11 +218,16 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const reloadData = React.useCallback(async () => {
+    await loadData();
+  }, [loadData]);
+
   return (
     <CMSContext.Provider value={{
       isEditing, toggleEditMode, getContent, updateContent,
       getResource, saveChanges, sendForReview, publish,
       canEdit, canEditKey, isLoading, isApiConfigured: api.isApiConfigured(),
+      reloadData,
     }}>
       {children}
     </CMSContext.Provider>

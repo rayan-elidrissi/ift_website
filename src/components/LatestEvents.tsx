@@ -100,7 +100,7 @@ export const LatestEvents = () => {
           id="latest-events"
           defaultData={events}
           maxItems={4}
-          containerClassName="grid grid-cols-2 md:grid-cols-4 gap-3"
+          containerClassName="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4"
           schema={[
             { key: 'title', label: 'Event Title', type: 'text' },
             { key: 'date', label: 'Date / Time', type: 'text' },
@@ -125,7 +125,7 @@ export const LatestEvents = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.3 }}
-              className="group cursor-pointer bg-white border border-neutral-200 rounded-md overflow-hidden hover:border-teal-300 hover:shadow transition-all"
+              className="group cursor-pointer bg-white border border-neutral-200 rounded-md overflow-hidden hover:border-teal-300 hover:shadow transition-all min-w-0"
             >
               <div className="aspect-[3/2] overflow-hidden bg-neutral-100">
                 <img
@@ -179,7 +179,7 @@ export const LatestEvents = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <h2 className="text-xl font-serif text-neutral-900 mb-2">
                     {selectedEvent.title}
                   </h2>

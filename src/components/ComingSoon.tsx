@@ -129,15 +129,14 @@ export const ComingSoon = () => {
             { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
           ]}
           renderItem={(item: ComingSoonItem, index: number) => (
-            <div key={item.id} className="pb-24">
-              <ProjectCard
+            <ProjectCard
+              key={item.id}
                 project={{ ...item, tags: normalizeTags(item.tags) }}
                 index={index}
                 aspectRatio="square"
                 variant="minimal"
                 onClick={() => setViewingItem(item)}
               />
-            </div>
           )}
         />
       </div>
@@ -191,7 +190,7 @@ export const ComingSoon = () => {
                 </div>
               </div>
 
-              <div className="flex-grow p-8 md:p-12 flex flex-col min-h-0">
+              <div className="flex-grow p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col min-h-0">
                 <div className="flex-1 min-h-0 overflow-y-auto pr-2">
                   <div className="mb-6">
                   <div className="flex flex-wrap gap-2 mb-4">
