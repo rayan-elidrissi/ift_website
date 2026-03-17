@@ -135,8 +135,40 @@ export const defaultStudentProjects = [
   },
 ];
 
+const EducationSkeleton = () => (
+  <div className="bg-white min-h-screen text-neutral-900 font-sans animate-pulse">
+    <section className="max-w-[1920px] mx-auto min-h-screen flex flex-col lg:flex-row">
+      <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-16 md:pt-20 lg:pt-24 flex flex-col justify-center border-r border-neutral-200">
+        <div className="mb-6">
+          <div className="h-12 md:h-16 bg-neutral-200 rounded w-64 mb-4" />
+          <div className="space-y-2 mb-12 max-w-xl">
+            <div className="h-5 bg-neutral-100 rounded w-full" />
+            <div className="h-5 bg-neutral-100 rounded w-3/4" />
+          </div>
+          <div className="h-4 bg-neutral-100 rounded w-36 mb-2" />
+        </div>
+        <div className="space-y-0">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="py-8 border-t border-neutral-200 flex items-baseline gap-8 px-4">
+              <div className="h-4 w-6 bg-neutral-100 rounded" />
+              <div className="h-7 bg-neutral-200 rounded w-48" />
+            </div>
+          ))}
+          <div className="border-t border-neutral-200" />
+        </div>
+      </div>
+      <div className="lg:w-1/2 lg:h-screen bg-neutral-100 hidden lg:block" />
+    </section>
+  </div>
+);
+
 export const Education = () => {
-  const { isEditing, getContent, updateContent } = useCMS();
+  const { isEditing, getContent, updateContent, isLoading, hasCache } = useCMS();
+
+  if (isLoading && !hasCache) {
+    return <EducationSkeleton />;
+  }
+
   const allPrograms = getContent('edu-programs', educationPrograms) as typeof educationPrograms;
   const allProjects = getContent('edu-student-projects', defaultStudentProjects) as typeof defaultStudentProjects;
   const [activeProgram, setActiveProgram] = useState(allPrograms[0] || educationPrograms[0]);

@@ -110,8 +110,30 @@ const exhibitionsSchema = [
   { key: 'tags', label: 'Tags (comma separated)', type: 'text' },
 ];
 
+const ArtsSkeleton = () => (
+  <div className="min-h-screen bg-white animate-pulse">
+    <section className="max-w-[1920px] mx-auto min-h-screen flex flex-col lg:flex-row">
+      <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-16 md:pt-20 lg:pt-24 flex flex-col justify-center border-r border-neutral-200">
+        <div className="h-12 md:h-16 bg-neutral-200 rounded w-32 mb-4" />
+        <div className="space-y-3 max-w-xl">
+          <div className="h-4 bg-neutral-100 rounded w-full" />
+          <div className="h-4 bg-neutral-100 rounded w-full" />
+          <div className="h-4 bg-neutral-100 rounded w-3/4" />
+          <div className="h-4 bg-neutral-100 rounded w-full mt-6" />
+          <div className="h-4 bg-neutral-100 rounded w-5/6" />
+        </div>
+      </div>
+      <div className="lg:w-1/2 lg:h-screen bg-neutral-100 hidden lg:block" />
+    </section>
+  </div>
+);
+
 export const Arts = () => {
-  const { getContent, updateContent, isEditing, canEditKey } = useCMS();
+  const { getContent, updateContent, isEditing, canEditKey, isLoading, hasCache } = useCMS();
+
+  if (isLoading && !hasCache) {
+    return <ArtsSkeleton />;
+  }
   const allExhibitions = getContent('arts-exhibitions', defaultExhibitions) as typeof defaultExhibitions;
   const visibleExhibitions = isEditing ? allExhibitions : (Array.isArray(allExhibitions) ? allExhibitions : []).filter((i: any) => !i.hidden);
 

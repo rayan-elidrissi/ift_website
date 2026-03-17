@@ -194,8 +194,39 @@ const CategoriesEditModal = ({ isOpen, onClose, categories, onSave }: Categories
   );
 };
 
+const ResearchSkeleton = () => (
+  <div className="bg-white min-h-screen animate-pulse">
+    <section className="max-w-[1920px] mx-auto min-h-screen flex flex-col lg:flex-row">
+      <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-16 md:pt-20 lg:pt-24 flex flex-col justify-center border-r border-neutral-200">
+        <div className="mb-6">
+          <div className="h-12 md:h-16 bg-neutral-200 rounded w-56 mb-4" />
+          <div className="space-y-2 mb-12 max-w-xl">
+            <div className="h-5 bg-neutral-100 rounded w-full" />
+            <div className="h-5 bg-neutral-100 rounded w-3/4" />
+          </div>
+          <div className="h-4 bg-neutral-100 rounded w-44 mb-2" />
+        </div>
+        <div className="space-y-0">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="py-8 border-t border-neutral-200 flex items-baseline gap-8 px-4">
+              <div className="h-4 w-6 bg-neutral-100 rounded" />
+              <div className="h-7 bg-neutral-200 rounded w-64" />
+            </div>
+          ))}
+          <div className="border-t border-neutral-200" />
+        </div>
+      </div>
+      <div className="lg:w-1/2 lg:h-screen bg-neutral-100 hidden lg:block" />
+    </section>
+  </div>
+);
+
 export const Research = () => {
-  const { getContent, updateContent, isEditing, canEditKey, isApiConfigured, reloadData } = useCMS();
+  const { getContent, updateContent, isEditing, canEditKey, isApiConfigured, reloadData, isLoading, hasCache } = useCMS();
+
+  if (isLoading && !hasCache) {
+    return <ResearchSkeleton />;
+  }
 
   // Re-fetch CMS data when visiting Research (helps if initial load missed page-research)
   useEffect(() => {

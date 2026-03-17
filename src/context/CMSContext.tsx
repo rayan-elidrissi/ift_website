@@ -5,6 +5,7 @@ import * as api from '../lib/api';
 import { PAGE_SLUGS, getSlugForKey, SLUG_TO_KEYS } from '../lib/resourceMapping';
 
 const LEGACY_BLOCK_TYPE = 'legacy_cms';
+const CMS_CACHE_KEY = 'ift_cms_cache';
 
 type ResourceVersion = 'Draft' | 'Published';
 
@@ -25,6 +26,7 @@ type CMSContextType = {
   canEditKey: (key: string) => boolean;
   isLoading: boolean;
   isApiConfigured: boolean;
+  hasCache: boolean;
   /** Force re-fetch CMS data from API */
   reloadData: () => Promise<void>;
 };
@@ -42,8 +44,14 @@ export const useCMS = () => {
 export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
   const { canEditAny, canEditKey } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [data, setData] = useState<Record<string, any>>({});
+  const [data, setData] = useState<Record<string, any>>(() => {
+    try {
+      const cached = sessionStorage.getItem(CMS_CACHE_KEY);
+      return cached ? JSON.parse(cached) : {};
+    } catch { return {}; }
+  });
   const [isLoading, setIsLoading] = useState(true);
+  const hasCache = Object.keys(data).length > 0;
 
   const canEdit = canEditAny;
 
@@ -53,26 +61,26 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
       return;
     }
-    const merged: Record<string, any> = {};
-    for (const slug of PAGE_SLUGS) {
-      try {
-        // Always try Draft first (source of truth), fall back to Published
+    const results = await Promise.allSettled(
+      PAGE_SLUGS.map(async (slug) => {
         const resource =
           (await api.getResourceOptional(slug, 'Draft') ?? await api.getResourceOptional(slug, 'Published'));
-        if (resource?.content) {
-          for (const block of resource.content as any[]) {
-            if (block?.type === LEGACY_BLOCK_TYPE && block.data) {
-              Object.assign(merged, block.data);
-              break;
-            }
-          }
+        return resource;
+      })
+    );
+    const merged: Record<string, any> = {};
+    for (const result of results) {
+      if (result.status !== 'fulfilled' || !result.value?.content) continue;
+      for (const block of result.value.content as any[]) {
+        if (block?.type === LEGACY_BLOCK_TYPE && block.data) {
+          Object.assign(merged, block.data);
+          break;
         }
-      } catch (e) {
-        if (import.meta.env.DEV) console.warn('[CMS] Failed to load slug:', slug, e);
       }
     }
     setData(merged);
     setIsLoading(false);
+    try { sessionStorage.setItem(CMS_CACHE_KEY, JSON.stringify(merged)); } catch { /* quota */ }
   }, []);
 
   useEffect(() => {
@@ -226,7 +234,7 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
       isEditing, toggleEditMode, getContent, updateContent,
       getResource, saveChanges, sendForReview, publish,
       canEdit, canEditKey, isLoading, isApiConfigured: api.isApiConfigured(),
-      reloadData,
+      hasCache, reloadData,
     }}>
       {children}
     </CMSContext.Provider>

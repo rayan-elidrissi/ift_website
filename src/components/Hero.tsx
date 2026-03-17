@@ -8,8 +8,25 @@ import { CMSModal } from './cms/CMSModal';
 import { useCMS } from '../context/CMSContext';
 import heroVideo from '../assets/hero_video.mp4';
 
+const HeroSkeleton = () => (
+  <div className="p-4 min-h-[calc(100vh-64px)] flex bg-[#ffffff]">
+    <div className="relative w-full flex-grow rounded-[2rem] overflow-hidden bg-neutral-200 animate-pulse">
+      <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 lg:p-16 flex flex-col gap-4">
+        <div className="h-12 md:h-20 bg-neutral-300/60 rounded w-3/4 max-w-3xl" />
+        <div className="h-6 md:h-8 bg-neutral-300/40 rounded w-full max-w-2xl" />
+        <div className="h-6 md:h-8 bg-neutral-300/40 rounded w-2/3 max-w-xl" />
+      </div>
+    </div>
+  </div>
+);
+
 export const Hero = () => {
-  const { isEditing, getContent, updateContent, canEditKey } = useCMS();
+  const { isEditing, getContent, updateContent, canEditKey, isLoading, hasCache } = useCMS();
+
+  if (isLoading && !hasCache) {
+    return <HeroSkeleton />;
+  }
+
   const canEditHero = isEditing && canEditKey('hero-video-url');
   const videoSrc = getContent('hero-video-url', '') as string;
   const [editingVideo, setEditingVideo] = useState(false);

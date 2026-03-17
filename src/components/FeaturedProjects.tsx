@@ -12,8 +12,39 @@ import { defaultStudentProjects } from './Education';
 import { defaultExhibitions } from './Arts';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
+const FeaturedProjectsSkeleton = () => (
+  <section className="bg-white py-24 px-6 md:px-12 border-b border-neutral-200 animate-pulse">
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-16">
+        <div className="h-3 bg-neutral-100 rounded w-20 mb-2" />
+        <div className="h-10 md:h-14 bg-neutral-200 rounded w-72 mb-4" />
+        <div className="h-4 bg-neutral-100 rounded w-36 mt-6" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="border border-neutral-200 overflow-hidden">
+            <div className="w-full aspect-video bg-neutral-200" />
+            <div className="p-6 space-y-3">
+              <div className="flex gap-2">
+                <div className="h-3 w-12 bg-neutral-100 rounded" />
+                <div className="h-3 w-10 bg-neutral-100 rounded" />
+              </div>
+              <div className="h-5 bg-neutral-200 rounded w-3/4" />
+              <div className="h-3 bg-neutral-100 rounded w-1/2 mt-4" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
 export const FeaturedProjects = () => {
-  const { getContent } = useCMS();
+  const { getContent, isLoading, hasCache } = useCMS();
+
+  if (isLoading && !hasCache) {
+    return <FeaturedProjectsSkeleton />;
+  }
   const [viewingProject, setViewingProject] = React.useState<UnifiedProject | null>(null);
 
   // Fetch from all three CMS sources

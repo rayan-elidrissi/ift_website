@@ -3,10 +3,47 @@ import { motion } from "motion/react";
 import { Team } from "./Team";
 import { EditableContent } from "./cms/EditableContent";
 import { EditableImageSingle } from "./cms/EditableImageSingle";
+import { useCMS } from "../context/CMSContext";
 // Placeholder image (replace with real asset when ready)
 const aboutImage = 'https://placehold.co/800x600/f5f5f5/999?text=About';
 
+const AboutSkeleton = () => (
+  <section className="relative pt-16 md:pt-20 lg:pt-24 pb-24 lg:pb-32 bg-white animate-pulse">
+    <div className="max-w-[1920px] mx-auto px-6 lg:px-12 xl:px-20">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-16">
+        <div className="lg:col-span-5 flex flex-col gap-6 lg:gap-8">
+          <div>
+            <div className="h-12 md:h-16 bg-neutral-200 rounded w-80 mb-4" />
+            <div className="h-5 bg-neutral-100 rounded w-48" />
+          </div>
+          <div className="space-y-2 border-l-2 border-neutral-200 pl-6 max-w-xl">
+            <div className="h-4 bg-neutral-100 rounded w-full" />
+            <div className="h-4 bg-neutral-100 rounded w-full" />
+            <div className="h-4 bg-neutral-100 rounded w-3/4" />
+          </div>
+          <div className="space-y-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-4 bg-neutral-200 rounded w-48" />
+                <div className="h-3 bg-neutral-100 rounded w-full" />
+                <div className="h-3 bg-neutral-100 rounded w-5/6" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="lg:col-span-7 min-h-[280px] bg-neutral-200 rounded" />
+      </div>
+    </div>
+  </section>
+);
+
 export const About = () => {
+  const { isLoading, hasCache } = useCMS();
+
+  if (isLoading && !hasCache) {
+    return <AboutSkeleton />;
+  }
+
   return (
     <>
       <section

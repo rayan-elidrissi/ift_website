@@ -70,8 +70,39 @@ const collaborationTypes = [
     }
 ];
 
+const CollaborateSkeleton = () => (
+  <div className="bg-white min-h-screen animate-pulse">
+    <section className="max-w-[1920px] mx-auto min-h-screen flex flex-col lg:flex-row">
+      <div className="lg:w-1/2 p-6 lg:p-12 xl:p-20 pt-16 md:pt-20 lg:pt-24 flex flex-col justify-center">
+        <div className="mb-6">
+          <div className="h-12 md:h-16 bg-neutral-200 rounded w-60 mb-4" />
+          <div className="space-y-2 mb-12 max-w-xl">
+            <div className="h-5 bg-neutral-100 rounded w-full" />
+            <div className="h-5 bg-neutral-100 rounded w-3/4" />
+          </div>
+          <div className="h-4 bg-neutral-100 rounded w-48 mb-2" />
+        </div>
+        <div className="space-y-0">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="py-8 border-t border-neutral-200 flex items-baseline gap-8 px-4">
+              <div className="h-4 w-6 bg-neutral-100 rounded" />
+              <div className="h-7 bg-neutral-200 rounded w-52" />
+            </div>
+          ))}
+          <div className="border-t border-neutral-200" />
+        </div>
+      </div>
+      <div className="lg:w-1/2 lg:h-screen bg-neutral-100 hidden lg:block" />
+    </section>
+  </div>
+);
+
 export const Collaborate = () => {
-  const { getContent, isEditing } = useCMS();
+  const { getContent, isEditing, isLoading, hasCache } = useCMS();
+
+  if (isLoading && !hasCache) {
+    return <CollaborateSkeleton />;
+  }
   const allCollabTypes = getContent('collaborate-types', collaborationTypes.map(({icon, ...rest}) => rest)) as Array<Omit<typeof collaborationTypes[0], 'icon'>>;
   const rawPartners = getContent('collaborate-partners', partners);
   const allPartners: PartnerItem[] = (Array.isArray(rawPartners) ? rawPartners : partners).map((p: unknown) => {
