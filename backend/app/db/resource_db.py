@@ -149,14 +149,29 @@ class ResourceDB:
         return ResourceStored(**stored, version="Draft")
 
     def update(self, slug: str, data: ResourceIn) -> ResourceStored:
-        """Update Draft only."""
+        """Update Draft only. If no Draft but Published exists, create Draft from Published first."""
         index = self._load_index()
         slugs = index.get(slug)
         if not slugs:
             raise ValueError(f"Resource '{slug}' not found")
         uid = slugs.get("Draft")
         if not uid:
-            raise ValueError(f"No Draft version for '{slug}'")
+            pub_uid = slugs.get("Published")
+            if not pub_uid:
+                raise ValueError(f"No Draft or Published version for '{slug}'")
+            try:
+                pub_data = self._read_resource_file(pub_uid)
+            except (FileNotFoundError, ValueError):
+                raise ValueError(f"Published version for '{slug}' is corrupted or missing")
+            from datetime import datetime
+            now = datetime.utcnow().isoformat() + "Z"
+            draft_uid = uuid.uuid4().hex
+            stored = {k: v for k, v in pub_data.items() if k != "uid"}
+            stored["last_updated"] = now
+            self._write_resource_file(draft_uid, stored)
+            index[slug]["Draft"] = draft_uid
+            self._save_index(index)
+            uid = draft_uid
         self._validate_tags(data.tags)
         from datetime import datetime
 

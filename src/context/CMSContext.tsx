@@ -56,10 +56,9 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
     const merged: Record<string, any> = {};
     for (const slug of PAGE_SLUGS) {
       try {
-        // Editors see Draft first (their unpublished changes); public sees Published first
-        const resource = canEdit
-          ? (await api.getResourceOptional(slug, 'Draft') ?? await api.getResourceOptional(slug, 'Published'))
-          : (await api.getResourceOptional(slug, 'Published') ?? await api.getResourceOptional(slug, 'Draft'));
+        // Always try Draft first (source of truth), fall back to Published
+        const resource =
+          (await api.getResourceOptional(slug, 'Draft') ?? await api.getResourceOptional(slug, 'Published'));
         if (resource?.content) {
           for (const block of resource.content as any[]) {
             if (block?.type === LEGACY_BLOCK_TYPE && block.data) {
@@ -74,7 +73,7 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
     }
     setData(merged);
     setIsLoading(false);
-  }, [canEdit]);
+  }, []);
 
   useEffect(() => {
     loadData();

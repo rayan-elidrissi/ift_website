@@ -1,13 +1,16 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { FileText, Share2, Filter, ArrowUpRight, Download, Calendar, X, Edit2, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { EditableCollection, EditModal } from './cms/EditableCollection';
 import { EditableContent } from './cms/EditableContent';
 import { CardButtons } from './CardButtons';
 import { CMSModal } from './cms/CMSModal';
 import { useCMS } from '../context/CMSContext';
+import { defaultPublications } from '../lib/defaultPublications';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+
+/** Re-export for backward compatibility (e.g. cached chunks, lazy imports) */
+export { defaultPublications };
 
 const researchThemes = [
   {
@@ -30,97 +33,6 @@ const researchThemes = [
     description: 'Designing resilient technological systems that prioritize ecological balance and long-term sustainability. We explore bio-materials, swarm intelligence for disaster recovery, and green energy systems.',
     image: 'https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=1080&auto=format&fit=crop',
     tags: ['Sustainability', 'Green Tech', 'Systems']
-  }
-];
-
-export const defaultPublications = [
-  {
-    id: "01",
-    title: "ReTouche: Embodied Representations for Self-Directed Piano Learning",
-    authors: "P.P. Arslan, H. Noh, M. Tamashiro, L. Badr, B. Lebrun, P. Lindber, H. Ishii, X. Xiao",
-    year: "2026",
-    journal: "CHI 2026",
-    abstract: "Exploring embodied representations to facilitate self-directed piano learning through haptic and visual feedback mechanisms.",
-    tags: ["HCI", "Haptics", "Learning"],
-    image: "https://images.unsplash.com/photo-1767716134807-646b08712f6d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    featured: true
-  },
-  {
-    id: "02",
-    title: "Co-Ideation Across Time: Revitalizing Legacy Design Sketchnotes with Conversational AI Agents to Foster Intergenerational Collaboration",
-    authors: "L. Li, Q. Kuang, X. Xiao, JB. Labrune, H. Ishii",
-    year: "2026",
-    journal: "CHI 2026",
-    abstract: "Investigating how conversational AI agents can bridge temporal gaps in design thinking by revitalizing legacy sketchnotes and fostering intergenerational collaboration.",
-    tags: ["AI", "HCI", "Design"],
-    image: "https://images.unsplash.com/photo-1647778977783-a8e03abc8dfe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    featured: true
-  },
-  {
-    id: "03",
-    title: "Haptixel: Enabling Data Physicalization through Force-based Encountered-Type Fingertip Haptics",
-    authors: "E. Bouzbib, L. Badr, A. Prouzeau, C. Pacchierotti, A. Lécuyer",
-    year: "2026",
-    journal: "CHI 2026",
-    abstract: "A novel approach to data physicalization using force-based encountered-type haptic feedback at the fingertip level, making data tangible and explorable.",
-    tags: ["Haptics", "Data Vis", "HCI"],
-    image: "https://images.unsplash.com/photo-1610766456229-a613e4f93814?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    featured: true
-  },
-  {
-    id: "04",
-    title: "MirrorMorphose",
-    authors: "M. Truong, S. Arnaud, M. Tamashiro, B. Costanzo, I. Winder, X. Xiao",
-    year: "2026",
-    journal: "TEI 2026 (Art Track)",
-    abstract: "An artistic exploration of transformation and reflection through interactive tangible media.",
-    tags: ["Art", "HCI", "Interfaces"],
-    image: "https://images.unsplash.com/photo-1737061365196-ea67128d64fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    featured: true
-  },
-  {
-    id: "05",
-    title: "Material Negotiations: Cultivating Bacterial Cellulose as Transitional Design Practice",
-    authors: "V. Roussel, M. Teyssier",
-    year: "2026",
-    journal: "ISEA 2026",
-    abstract: "Exploring bacterial cellulose cultivation as a transitional design practice that bridges biological processes and material design.",
-    tags: ["Bio-Design", "Materials", "Art"],
-    image: "https://images.unsplash.com/photo-1694500069324-d782decdd190?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    featured: true
-  },
-  {
-    id: "06",
-    title: "Designing Biohybrid Interfaces through Microbial Morphogenesis: A Case of Co-Becoming with Kombucha",
-    authors: "V. Roussel, T. Safa",
-    year: "2026",
-    journal: "ISEA 2026",
-    abstract: "Investigating the design of biohybrid interfaces using kombucha and microbial morphogenesis, exploring co-becoming between living organisms and interactive systems.",
-    tags: ["Bio-Design", "Interfaces", "Art"],
-    image: "https://images.unsplash.com/photo-1737061365196-ea67128d64fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    featured: false
-  },
-  {
-    id: "07",
-    title: "Reimagining Learning through Arts & Making: Creative Identity Work in Partnership",
-    authors: "Kristina Stamatis, Joseph Polman, Jrène Rahm, Mariana Tamashiro, et al.",
-    year: "2026",
-    journal: "ISLS 2026 (Symposium)",
-    abstract: "A symposium exploring creative identity work in partnership, examining how arts and making can transform learning experiences across different contexts.",
-    tags: ["Learning", "Art", "Education"],
-    image: "https://images.unsplash.com/photo-1759270463243-414a287681be?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    featured: false
-  },
-  {
-    id: "08",
-    title: "From Remote Space to Remote Time (Panel)",
-    authors: "H. Ishii, H.J. Youn, J. Li, X. Xiao, E. Ch'ng, J. Brubaker, J. Wallace, P. Pataranutaporn",
-    year: "2026",
-    journal: "CHI 2026 (Panel)",
-    abstract: "A panel discussion exploring the evolution from remote space collaboration to temporal collaboration, examining how technology mediates time-shifted interactions.",
-    tags: ["HCI", "Collaboration", "Future"],
-    image: "https://images.unsplash.com/photo-1647083701139-3930542304cf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    featured: false
   }
 ];
 
@@ -320,9 +232,7 @@ export const Research = () => {
     }
   }, [researchThemesList]);
   const [viewingPaper, setViewingPaper] = useState<typeof allPublications[0] | null>(null);
-  const [isPaperAbstractExpanded, setIsPaperAbstractExpanded] = useState(false);
-  const [hasPaperAbstractOverflow, setHasPaperAbstractOverflow] = useState(false);
-  const paperAbstractRef = useRef<HTMLDivElement | null>(null);
+  
   const [isHoveringList, setIsHoveringList] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
 
@@ -372,45 +282,9 @@ export const Research = () => {
     }
   }, [filterCategories, selectedCategory]);
 
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (viewingPaper) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [viewingPaper]);
+  useBodyScrollLock(!!viewingPaper);
 
-  useEffect(() => {
-    if (viewingPaper) {
-      setIsPaperAbstractExpanded(false);
-    }
-  }, [viewingPaper]);
-
-  useEffect(() => {
-    if (!viewingPaper || isPaperAbstractExpanded) {
-      setHasPaperAbstractOverflow(false);
-      return;
-    }
-
-    const checkOverflow = () => {
-      const el = paperAbstractRef.current;
-      if (!el) return;
-      setHasPaperAbstractOverflow(el.scrollHeight > el.clientHeight + 1);
-    };
-
-    const frame = requestAnimationFrame(checkOverflow);
-    window.addEventListener('resize', checkOverflow);
-
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener('resize', checkOverflow);
-    };
-  }, [viewingPaper, isPaperAbstractExpanded]);
+  
 
   // Reset selected category if it was removed from the list
   useEffect(() => {
@@ -420,15 +294,15 @@ export const Research = () => {
     }
   }, [filterCategories, selectedCategory]);
 
-  // Extract unique years and sort descending
+  // Extract unique years and sort descending (guard against undefined year in empty cards)
   const years = useMemo(() => {
-    const uniqueYears = Array.from(new Set(allPublications.map((p: any) => p.year)));
-    return ['All', ...uniqueYears.sort((a: any, b: any) => b.localeCompare(a))];
+    const uniqueYears = Array.from(new Set(allPublications.map((p: any) => p.year ?? '')));
+    return ['All', ...uniqueYears.filter(Boolean).sort((a: any, b: any) => String(b).localeCompare(String(a)))];
   }, [allPublications]);
 
-  // Filter full publications
+  // Filter full publications (guard against undefined year in empty cards)
   const filteredPublications = useMemo(() => {
-    let pubs = [...allPublications].sort((a: any, b: any) => b.year.localeCompare(a.year));
+    let pubs = [...allPublications].sort((a: any, b: any) => String(b.year ?? '').localeCompare(String(a.year ?? '')));
     
     // Filter by Year
     if (selectedYear !== 'All') {
@@ -612,6 +486,7 @@ export const Research = () => {
               -ms-overflow-style: none;
               scrollbar-width: none;
           }
+          
         `}</style>
       </section>
 
@@ -804,15 +679,15 @@ export const Research = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setViewingPaper(null)}
-              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+              onTouchMove={(e) => e.preventDefault()}
+              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm touch-none"
             />
             
             <motion.div 
-              layoutId={`pub-${viewingPaper.id}`}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl"
             >
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
                 {canEditPublications && (
@@ -832,6 +707,7 @@ export const Research = () => {
                 </button>
               </div>
 
+              <div className="max-h-[90vh] overflow-y-auto md:overflow-hidden modal-scroll flex flex-col md:flex-row">
               {/* Media Section - Left Side (Landscape/Rectangular) */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
                 {(() => {
@@ -848,7 +724,7 @@ export const Research = () => {
                 </div>
               </div>
 
-              {/* Content Section - Right Side */}
+              {/* Content Section - Right Side (single scroll container on mobile) */}
               <div className="flex-grow p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col min-h-0">
                 <div className="flex-1 min-h-0 overflow-y-auto pr-2">
                   <div className="mb-6">
@@ -870,52 +746,18 @@ export const Research = () => {
                     </div>
 
                     <div className="prose prose-neutral prose-sm max-w-none mb-8">
-                      <div className="relative">
-                        <div
-                          ref={paperAbstractRef}
-                          className={`transition-all ${
-                            isPaperAbstractExpanded ? 'max-h-64 overflow-y-auto pr-2' : 'max-h-28 overflow-hidden'
-                          }`}
-                        >
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {viewingPaper.abstract?.trim() || 'No abstract available.'}
-                          </ReactMarkdown>
-                          <p className="text-neutral-600 leading-relaxed text-base mt-4">
-                            {/* Simulated extended abstract for the demo since we only have short snippets */}
-                            This research contributes significantly to the field by introducing novel methodologies and rigorous evaluation frameworks.
-                            {` Our results demonstrate clear improvements over existing state-of-the-art solutions, opening new avenues for future investigation${
-                              Array.isArray(viewingPaper.tags) && viewingPaper.tags.length > 0
-                                ? ` in ${viewingPaper.tags.filter(Boolean).slice(0, 2).join(' and ')}`
-                                : ''
-                            }.`}
-                          </p>
-                        </div>
-
-                        {!isPaperAbstractExpanded && hasPaperAbstractOverflow && (
-                          <>
-                            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white via-white/95 to-transparent" />
-                            <button
-                              type="button"
-                              onClick={() => setIsPaperAbstractExpanded(true)}
-                              className="absolute bottom-1 right-1 font-mono text-sm text-teal-700 hover:text-teal-500 transition-colors"
-                              aria-label="Show full abstract"
-                            >
-                              ...
-                            </button>
-                          </>
-                        )}
-                      </div>
+                      <p className="text-neutral-600 leading-relaxed text-base whitespace-pre-line">
+                        {viewingPaper.abstract?.trim() || 'No abstract available.'}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <CardButtons
                   item={viewingPaper}
-                  defaultButtons={[
-                    { label: 'Read PDF', primary: true },
-                    { label: 'Cite', primary: false },
-                  ]}
+                  defaultButtons={[]}
                 />
+              </div>
               </div>
             </motion.div>
           </div>

@@ -5,6 +5,7 @@ import { EditableCollection } from './cms/EditableCollection';
 import { EditableContent } from './cms/EditableContent';
 import { useCMS } from '../context/CMSContext';
 import { EditableLink } from './cms/EditableLink';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 // Placeholder image (replace with real assets when ready)
 const PLACEHOLDER_AVATAR = 'https://placehold.co/300x400/f5f5f5/999?text=Photo';
 
@@ -117,12 +118,7 @@ export const Team = () => {
   const { isEditing } = useCMS();
   const [activeMember, setActiveMember] = React.useState<TeamMember | null>(null);
 
-  React.useEffect(() => {
-    document.body.style.overflow = activeMember ? 'hidden' : 'unset';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [activeMember]);
+  useBodyScrollLock(!!activeMember);
 
   return (
     <section className="pt-16 pb-24 md:pt-20 md:pb-24 bg-neutral-950 text-white relative font-serif overflow-hidden">
@@ -285,14 +281,15 @@ export const Team = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setActiveMember(null)}
-              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+              onTouchMove={(e) => e.preventDefault()}
+              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm touch-none"
             />
 
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl"
             >
               <button
                 onClick={() => setActiveMember(null)}
@@ -302,6 +299,7 @@ export const Team = () => {
                 <X className="w-5 h-5 text-neutral-900" />
               </button>
 
+              <div className="max-h-[90vh] overflow-y-auto md:overflow-hidden modal-scroll flex flex-col md:flex-row">
               <div className="w-full md:w-2/5 aspect-[3/4] md:aspect-auto bg-neutral-100">
                 <img
                   src={activeMember.image}
@@ -329,6 +327,7 @@ export const Team = () => {
                 <p className="text-base leading-relaxed text-neutral-700 whitespace-pre-line">
                   {activeMember.bio || 'Bio coming soon.'}
                 </p>
+              </div>
               </div>
               </div>
             </motion.div>

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import {
   ArrowRight,
   Check,
@@ -147,18 +148,7 @@ export const Education = () => {
   const [hasProjectDescriptionOverflow, setHasProjectDescriptionOverflow] = useState(false);
   const projectDescriptionRef = useRef<HTMLDivElement | null>(null);
 
-  // Prevent body scroll when modal is open
-  React.useEffect(() => {
-    if (viewingProject) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [viewingProject]);
+  useBodyScrollLock(!!viewingProject);
 
   React.useEffect(() => {
     if (viewingProject) {
@@ -645,7 +635,8 @@ export const Education = () => {
                 setViewingProject(null);
                 setEditingProjectInModal(false);
               }}
-              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+              onTouchMove={(e) => e.preventDefault()}
+              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm touch-none"
             />
             
             <motion.div
@@ -653,7 +644,7 @@ export const Education = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl"
             >
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
                 {isEditing && !editingProjectInModal && (
@@ -676,6 +667,7 @@ export const Education = () => {
                 </button>
               </div>
 
+              <div className="max-h-[90vh] overflow-y-auto md:overflow-hidden modal-scroll flex flex-col md:flex-row">
               {/* Media Section - Left Side */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
                 {viewingProject.video ? (
@@ -830,6 +822,7 @@ export const Education = () => {
                     </div>
                   </>
                 )}
+              </div>
               </div>
             </motion.div>
           </div>

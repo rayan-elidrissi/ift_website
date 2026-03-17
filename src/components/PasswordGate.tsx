@@ -6,6 +6,7 @@ const GATE_PASSWORD = import.meta.env.VITE_GATE_PASSWORD ?? '';
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL ?? '';
 
 export const isGateConfigured = () =>
+  import.meta.env.VITE_ENABLE_PASSWORD_GATE !== 'false' &&
   !!GATE_PASSWORD && !!ADMIN_EMAIL;
 
 export const PasswordGate = () => {

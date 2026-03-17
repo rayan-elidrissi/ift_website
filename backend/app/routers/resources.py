@@ -52,8 +52,8 @@ def update_resource(
     data: ResourceIn,
     user: Annotated[Optional[dict], Depends(get_current_user_optional)] = None,
 ):
-    """Update Draft only."""
-    resource = db.get(slug, "Draft")
+    """Update Draft only. If no Draft but Published exists, creates Draft from Published first."""
+    resource = db.get(slug, "Draft") or db.get(slug, "Published")
     if not resource:
         raise HTTPException(status_code=404, detail="Resource not found")
     if not has_access(user, slug, "Draft", "UPDATE", resource.authors, resource.tags):

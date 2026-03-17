@@ -106,6 +106,7 @@ export const Navbar = () => {
           </div>
 
           {/* Right Actions */}
+          {gateConfigured && (
           <div className="hidden lg:flex items-center space-x-6 ml-12 flex-shrink-0 relative z-[60]">
             {isLoggedIn ? (
               <>
@@ -130,6 +131,7 @@ export const Navbar = () => {
               </button>
             )}
           </div>
+          )}
 
           {/* Mobile Menu Button */}
           <div className="lg:hidden z-[60] ml-auto">
@@ -215,7 +217,7 @@ export const Navbar = () => {
 
                   {/* Bottom section: auth + social — pushed to bottom */}
                   <div className="flex-shrink-0 pt-8 mt-auto pb-6">
-                    {/* Auth actions */}
+                    {gateConfigured && (
                     <div className="pt-6 border-t border-neutral-200 flex flex-col gap-4">
                       {isLoggedIn ? (
                         <>
@@ -240,6 +242,7 @@ export const Navbar = () => {
                         </button>
                       )}
                     </div>
+                    )}
 
                     {/* Social media */}
                     <div className="mt-6 pt-6 border-t border-neutral-200 flex gap-4">

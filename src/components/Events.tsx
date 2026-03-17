@@ -7,6 +7,7 @@ import { CardButtons } from './CardButtons';
 import { EditableContent } from './cms/EditableContent';
 import { EditableCollection, EditModal } from './cms/EditableCollection';
 import { useCMS } from '../context/CMSContext';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 const talks = [
   {
@@ -428,18 +429,7 @@ export const Events = () => {
     [],
   );
 
-  // Prevent body scroll when modal is open
-  React.useEffect(() => {
-    if (viewingTalk || viewingFestival || viewingMisc) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [viewingTalk, viewingFestival, viewingMisc]);
+  useBodyScrollLock(!!viewingTalk || !!viewingFestival || !!viewingMisc);
 
   // Carousel settings — mobile: full-width cards + dots; desktop: multi-column
   const sliderSettings = {
@@ -757,14 +747,15 @@ export const Events = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setViewingTalk(null)}
-              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+              onTouchMove={(e) => e.preventDefault()}
+              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm touch-none"
             />
             
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl"
             >
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
                 {canEditTalks && (
@@ -777,6 +768,7 @@ export const Events = () => {
                 </button>
               </div>
 
+              <div className="max-h-[90vh] overflow-y-auto md:overflow-hidden modal-scroll flex flex-col md:flex-row">
               {/* Media Section - Left Side */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
                 <img 
@@ -857,6 +849,7 @@ export const Events = () => {
                 />
                 </div>
               </div>
+              </div>
             </motion.div>
           </div>
         )}
@@ -871,14 +864,15 @@ export const Events = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setViewingFestival(null)}
-              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+              onTouchMove={(e) => e.preventDefault()}
+              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm touch-none"
             />
             
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl"
             >
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
                 {canEditFestivals && (
@@ -891,6 +885,7 @@ export const Events = () => {
                 </button>
               </div>
 
+              <div className="max-h-[90vh] overflow-y-auto md:overflow-hidden modal-scroll flex flex-col md:flex-row">
               {/* Media Section - Left Side */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
                 <img 
@@ -967,6 +962,7 @@ export const Events = () => {
                   ]}
                 />
               </div>
+              </div>
             </motion.div>
           </div>
         )}
@@ -981,14 +977,15 @@ export const Events = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setViewingMisc(null)}
-              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+              onTouchMove={(e) => e.preventDefault()}
+              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm touch-none"
             />
             
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl"
             >
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
                 {canEditMisc && (
@@ -1001,6 +998,7 @@ export const Events = () => {
                 </button>
               </div>
 
+              <div className="max-h-[90vh] overflow-y-auto md:overflow-hidden modal-scroll flex flex-col md:flex-row">
               {/* Media Section - Left Side */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
                 <img 
@@ -1088,6 +1086,7 @@ export const Events = () => {
                     { label: 'Share', primary: false },
                   ]}
                 />
+              </div>
               </div>
             </motion.div>
           </div>

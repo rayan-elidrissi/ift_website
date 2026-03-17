@@ -3796,3 +3796,8 @@ svg[aria-label="Institute for Future Technologies logo"] {
   font-size: 13px !important;
   padding: 0 !important;
 }
+
+.modal-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}

@@ -9,6 +9,7 @@ import { EditableCollection, EditModal } from './cms/EditableCollection';
 import { EditableImageSingle } from './cms/EditableImageSingle';
 import { CardButtons } from './CardButtons';
 import { useCMS } from '../context/CMSContext';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 export const defaultExhibitions = [
   {
@@ -118,6 +119,8 @@ export const Arts = () => {
     (typeof defaultExhibitions)[0] | null
   >(null);
   const [editingWorkInModal, setEditingWorkInModal] = useState(false);
+
+  useBodyScrollLock(!!selectedWork);
   const canEditExhibitions = isEditing && canEditKey('arts-exhibitions');
 
   const handleSaveWorkEdit = (updated: any) => {
@@ -297,15 +300,15 @@ export const Arts = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedWork(null)}
-              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+              onTouchMove={(e) => e.preventDefault()}
+              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm touch-none"
             />
             
             <motion.div 
-              layoutId={`work-${selectedWork.id}`}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl"
             >
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
                 {canEditExhibitions && (
@@ -318,6 +321,7 @@ export const Arts = () => {
                 </button>
               </div>
 
+              <div className="max-h-[90vh] overflow-y-auto md:overflow-hidden modal-scroll flex flex-col md:flex-row">
               {/* Media Section - Left Side (Landscape/Rectangular) */}
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
                 <img 
@@ -375,6 +379,7 @@ export const Arts = () => {
                     { label: 'Share', primary: false },
                   ]}
                 />
+              </div>
               </div>
             </motion.div>
           </div>

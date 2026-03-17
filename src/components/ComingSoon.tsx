@@ -7,6 +7,7 @@ import { EditableCollection } from './cms/EditableCollection';
 import { CardButtons } from './CardButtons';
 import { useCMS } from '../context/CMSContext';
 import { ProjectCard } from './ProjectCard';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 export type ComingSoonItem = {
   id: string;
@@ -66,16 +67,7 @@ export const ComingSoon = () => {
     return [];
   };
 
-  React.useEffect(() => {
-    if (viewingItem) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [viewingItem]);
+  useBodyScrollLock(!!viewingItem);
 
   return (
     <section className="bg-white py-24 px-6 md:px-12 border-b border-neutral-200">
@@ -150,15 +142,15 @@ export const ComingSoon = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setViewingItem(null)}
-              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+              onTouchMove={(e) => e.preventDefault()}
+              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm touch-none"
             />
 
             <motion.div
-              layoutId={`coming-soon-${viewingItem.id}`}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl flex flex-col md:flex-row"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden relative z-10 shadow-2xl"
             >
               <button
                 onClick={() => setViewingItem(null)}
@@ -167,6 +159,7 @@ export const ComingSoon = () => {
                 <X className="w-6 h-6 text-neutral-900" />
               </button>
 
+              <div className="max-h-[90vh] overflow-y-auto md:overflow-hidden modal-scroll flex flex-col md:flex-row">
               <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-auto bg-neutral-100 relative flex-shrink-0">
                 {viewingItem.video ? (
                   <video
@@ -228,6 +221,7 @@ export const ComingSoon = () => {
                     { label: 'Share', primary: false },
                   ]}
                 />
+              </div>
               </div>
             </motion.div>
           </div>

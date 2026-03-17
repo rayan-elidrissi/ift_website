@@ -68,7 +68,7 @@ const AppContent = () => {
               <Route path="/collaborate" element={<Collaborate />} />
               {/* Redirect old contact route to collaborate */}
               <Route path="/contact" element={<Navigate to="/collaborate" replace />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/login" element={isGateConfigured() ? <Login /> : <Navigate to="/" replace />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute requireAdmin>
