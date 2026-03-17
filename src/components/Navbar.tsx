@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
-import { LogIn, LogOut, Menu, X, Twitter, Linkedin, Instagram, Github } from "lucide-react";
-import { useCMS } from "../context/CMSContext";
+import { LogIn, LogOut, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
@@ -10,13 +9,6 @@ import { isGateConfigured } from "./PasswordGate";
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
-  const { getContent } = useCMS();
-  const socialLinks = {
-    twitter: getContent("footer-social-twitter", "#"),
-    linkedin: getContent("footer-social-linkedin", "#"),
-    instagram: getContent("footer-social-instagram", "#"),
-    github: getContent("footer-social-github", "#"),
-  };
   const location = useLocation();
   const navigate = useNavigate();
   const isLoggedIn = !!user;
@@ -244,21 +236,6 @@ export const Navbar = () => {
                     </div>
                     )}
 
-                    {/* Social media */}
-                    <div className="mt-6 pt-6 border-t border-neutral-200 flex gap-4">
-                      <a href={socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-teal-600 transition-colors" aria-label="Twitter">
-                        <Twitter className="w-5 h-5" />
-                      </a>
-                      <a href={socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-teal-600 transition-colors" aria-label="LinkedIn">
-                        <Linkedin className="w-5 h-5" />
-                      </a>
-                      <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-teal-600 transition-colors" aria-label="Instagram">
-                        <Instagram className="w-5 h-5" />
-                      </a>
-                      <a href={socialLinks.github} target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-teal-600 transition-colors" aria-label="GitHub">
-                        <Github className="w-5 h-5" />
-                      </a>
-                    </div>
                   </div>
                 </nav>
               </motion.div>

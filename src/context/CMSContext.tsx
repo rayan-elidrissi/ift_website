@@ -6,6 +6,7 @@ import { PAGE_SLUGS, getSlugForKey, SLUG_TO_KEYS } from '../lib/resourceMapping'
 
 const LEGACY_BLOCK_TYPE = 'legacy_cms';
 const CMS_CACHE_KEY = 'ift_cms_cache';
+const CMS_CACHE_URL_KEY = 'ift_cms_cache_url';
 
 type ResourceVersion = 'Draft' | 'Published';
 
@@ -46,6 +47,13 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [data, setData] = useState<Record<string, any>>(() => {
     try {
+      const cachedUrl = sessionStorage.getItem(CMS_CACHE_URL_KEY);
+      const currentUrl = api.getApiBase();
+      if (cachedUrl && cachedUrl !== currentUrl) {
+        sessionStorage.removeItem(CMS_CACHE_KEY);
+        sessionStorage.removeItem(CMS_CACHE_URL_KEY);
+        return {};
+      }
       const cached = sessionStorage.getItem(CMS_CACHE_KEY);
       return cached ? JSON.parse(cached) : {};
     } catch { return {}; }
@@ -80,7 +88,10 @@ export const CMSProvider = ({ children }: { children: React.ReactNode }) => {
     }
     setData(merged);
     setIsLoading(false);
-    try { sessionStorage.setItem(CMS_CACHE_KEY, JSON.stringify(merged)); } catch { /* quota */ }
+    try {
+      sessionStorage.setItem(CMS_CACHE_KEY, JSON.stringify(merged));
+      sessionStorage.setItem(CMS_CACHE_URL_KEY, api.getApiBase());
+    } catch { /* quota */ }
   }, []);
 
   useEffect(() => {
