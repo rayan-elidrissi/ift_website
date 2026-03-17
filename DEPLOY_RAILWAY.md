@@ -16,7 +16,7 @@ Note : le dossier `backend/db/` est dans `.gitignore`, donc Railway déploiera u
 
 ## Partie 1 : Déployer le backend sur Railway
 
-### Étape 1.1 – Créer un projet Railway
+### Étape 1.1 – Créer un Backend Railway
 
 1. Va sur [railway.app](https://railway.app) et connecte-toi (GitHub).
 2. Clique sur **New Project**.
